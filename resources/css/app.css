@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    /* Remove blue tap flash on mobile */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Prevent rubber-band scroll on iOS (app feel) */
+    html, body {
+        overscroll-behavior-y: none;
+    }
+
+    /* 16px base prevents iOS auto-zoom on input focus */
+    input, textarea, select {
+        font-size: 16px;
+    }
+}
+
+@layer utilities {
+    /* Safe-area padding for iOS notch / home indicator */
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    .pt-safe {
+        padding-top: env(safe-area-inset-top);
+    }
+}
