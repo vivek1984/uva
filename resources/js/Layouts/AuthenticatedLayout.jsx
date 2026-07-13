@@ -220,7 +220,7 @@ export default function AuthenticatedLayout({ header, children }) {
             </aside>
 
             {/* ── Main area ─────────────────────────────── */}
-            <div className="flex flex-1 flex-col md:pl-60">
+            <div className="flex min-w-0 flex-1 flex-col md:pl-60">
 
                 {/* Mobile top bar */}
                 <header
@@ -269,7 +269,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <Link
                             key={item.label}
                             href={route(item.href)}
-                            className={`relative flex flex-1 flex-col items-center gap-1 py-2 transition-colors ${
+                            className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-2 transition-colors ${
                                 active ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
                             }`}
                         >
@@ -279,7 +279,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             <span className={`flex-none ${active ? 'text-indigo-600' : 'text-slate-400'}`}>
                                 {Icon[item.icon]}
                             </span>
-                            <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+                            <span className="max-w-full truncate px-1 text-[11px] font-semibold leading-none">{item.label}</span>
                         </Link>
                     );
                 })}

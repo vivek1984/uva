@@ -47,14 +47,14 @@ function SectionCard({ section, isFirst, isLast }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-none items-center gap-1.5">
-                    <button onClick={() => move('up')} disabled={isFirst} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30" title="Move up">
+                <div className="flex flex-none items-center gap-1 sm:gap-1.5">
+                    <button onClick={() => move('up')} disabled={isFirst} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 disabled:opacity-30" title="Move up">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                     </button>
-                    <button onClick={() => move('down')} disabled={isLast} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30" title="Move down">
+                    <button onClick={() => move('down')} disabled={isLast} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 disabled:opacity-30" title="Move down">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </button>
-                    <button onClick={toggle} className={`rounded-lg p-1.5 ${section.is_published ? 'text-green-500 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`} title={section.is_published ? 'Published — click to hide' : 'Hidden — click to publish'}>
+                    <button onClick={toggle} className={`rounded-lg p-2 ${section.is_published ? 'text-green-500 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`} title={section.is_published ? 'Published — click to hide' : 'Hidden — click to publish'}>
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             {section.is_published
                                 ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -62,10 +62,10 @@ function SectionCard({ section, isFirst, isLast }) {
                             }
                         </svg>
                     </button>
-                    <Link href={route('homepage.sections.edit', section.id)} className="rounded-lg p-1.5 text-indigo-500 hover:bg-indigo-50" title="Edit">
+                    <Link href={route('homepage.sections.edit', section.id)} className="rounded-lg p-2 text-indigo-500 hover:bg-indigo-50" title="Edit">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </Link>
-                    <button onClick={destroy} className="rounded-lg p-1.5 text-red-400 hover:bg-red-50" title="Delete">
+                    <button onClick={destroy} className="ml-1 rounded-lg p-2 text-red-400 hover:bg-red-50" title="Delete">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                 </div>
@@ -83,12 +83,12 @@ export default function Manager({ sections }) {
 
             <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
                 {/* Header */}
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Homepage</h1>
                         <p className="mt-0.5 text-sm text-gray-500">Manage what visitors see on the front page</p>
                     </div>
-                    <div className="relative">
+                    <div className="relative sm:flex-none">
                         <button
                             onClick={() => setShowAddMenu(v => !v)}
                             className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 active:scale-95"

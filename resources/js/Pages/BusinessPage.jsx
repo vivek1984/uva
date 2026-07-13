@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function formatPrice(price) {
     if (!price) return null;
@@ -179,6 +179,33 @@ function SeoHead({ member, products }) {
         }),
     };
 
+    // Standalone Product schema per product — this is the shape Google's
+    // rich-results ("Merchant listing") eligibility actually looks for.
+    // Only numeric prices produce a valid `offers` block; a price range
+    // string (e.g. "500-1000") isn't a valid schema.org price, so it's left
+    // out rather than sending a bad value.
+    const productJsonLd = products.slice(0, 20).map(p => {
+        const numericPrice = /^\d+(\.\d+)?$/.test(String(p.price ?? '').trim()) ? p.price : null;
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: p.name,
+            ...(p.description && { description: p.description }),
+            ...(p.category    && { category: p.category }),
+            ...(p.photos?.[0]?.url && { image: p.photos.map(ph => ph.url) }),
+            brand: { '@type': 'Brand', name: firmName },
+            ...(numericPrice && {
+                offers: {
+                    '@type': 'Offer',
+                    price: numericPrice,
+                    priceCurrency: 'INR',
+                    availability: 'https://schema.org/InStock',
+                    url,
+                },
+            }),
+        };
+    });
+
     return (
         <Head>
             <title>{title}</title>
@@ -204,6 +231,9 @@ function SeoHead({ member, products }) {
 
             {/* JSON-LD */}
             <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+            {productJsonLd.map((pld, i) => (
+                <script key={i} type="application/ld+json">{JSON.stringify(pld)}</script>
+            ))}
         </Head>
     );
 }
@@ -212,6 +242,31 @@ function SeoHead({ member, products }) {
 export default function BusinessPage({ member, products }) {
     const contactNumber = member.whatsapp_number || member.phone_number;
     const generalWaLink = contactNumber ? whatsappLink(contactNumber, `Hi! I found you on UVA Vyapari Welfare Association. I'd like to know more about your business.`) : null;
+
+    // Pre-fill from ?product=<name> so a click-through from the homepage
+    // search lands here with the matching product already surfaced.
+    const [query, setQuery] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        return new URLSearchParams(window.location.search).get('product') ?? '';
+    });
+
+    useEffect(() => {
+        if (query) {
+            document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        // Only run on initial mount — this is a one-time landing scroll, not a
+        // per-keystroke behavior.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const q = query.trim().toLowerCase();
+    const filteredProducts = q
+        ? products.filter(p =>
+            p.name?.toLowerCase().includes(q) ||
+            p.category?.toLowerCase().includes(q) ||
+            p.description?.toLowerCase().includes(q)
+          )
+        : products;
 
     return (
         <>
@@ -360,21 +415,46 @@ export default function BusinessPage({ member, products }) {
                 </div>
 
                 {/* ── Products ─────────────────────────────────── */}
-                <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-                    <div className="mb-6 flex items-baseline gap-3">
+                <div id="products" className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+                    <div className="mb-6 flex flex-wrap items-baseline gap-3">
                         <h2 className="text-xl font-bold text-gray-900">Products & Services</h2>
                         <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-sm font-bold text-indigo-700">
                             {products.length}
                         </span>
                     </div>
 
+                    {products.length > 0 && (
+                        <div className="relative mx-auto mb-6 max-w-md">
+                            <svg className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                placeholder="Search products or services…"
+                                className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-9 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                            {query && (
+                                <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {products.length === 0 ? (
                         <div className="rounded-2xl border-2 border-dashed border-gray-200 py-24 text-center">
                             <p className="text-gray-400">No products listed yet.</p>
                         </div>
+                    ) : filteredProducts.length === 0 ? (
+                        <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center">
+                            <p className="text-sm font-medium text-gray-400">No products match "{query}"</p>
+                            <button onClick={() => setQuery('')} className="mt-2 text-xs text-indigo-600 hover:underline">Clear search</button>
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            {products.map(p => (
+                            {filteredProducts.map(p => (
                                 <ProductCard
                                     key={p.id}
                                     product={p}

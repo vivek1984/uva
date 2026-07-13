@@ -12,6 +12,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionnaireController;
 use App\Http\Controllers\QuestionnaireResponseController;
+use App\Http\Controllers\RequirementActionController;
+use App\Http\Controllers\RequirementController;
 use App\Models\MemberProfile;
 use App\Models\PageSection;
 use App\Models\User;
@@ -46,7 +48,7 @@ Route::get('/', function () {
 
     $members = User::whereIn('role', ['general', 'executive'])
         ->where('status', 'active')
-        ->with('profile')
+        ->with(['profile', 'products' => fn ($q) => $q->where('is_published', true)])
         ->get()
         ->map(fn($u) => [
             'id'               => $u->id,
@@ -56,6 +58,11 @@ Route::get('/', function () {
             'business_services'=> $u->profile?->business_services,
             'photo_url'        => $u->profile?->photo ? asset('storage/' . $u->profile->photo) : null,
             'business_url'     => route('business.show', $u->business_slug),
+            'products'         => $u->products->map(fn ($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
+                'category' => $p->category,
+            ])->values(),
         ])
         ->shuffle($daySeed)
         ->values();
@@ -68,6 +75,9 @@ Route::get('/', function () {
         'members'     => $members,
     ]);
 });
+
+// Public requirement submission (from the homepage search bar area)
+Route::post('/requirements', [RequirementController::class, 'store'])->name('requirements.store');
 
 // Redirect to role-specific dashboard after login
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -82,6 +92,12 @@ Route::middleware('auth')->group(function () {
 
     // Shared member profile form (all roles)
     Route::post('/member-profile', [MemberProfileController::class, 'store'])->name('member-profile.store');
+
+    // Shared requirement board actions (all roles)
+    Route::post('/requirements/{requirement}/seen', [RequirementActionController::class, 'markSeen'])->name('requirements.seen');
+    Route::post('/requirements/{requirement}/attend', [RequirementActionController::class, 'attend'])->name('requirements.attend');
+    Route::post('/requirements/{requirement}/unattend', [RequirementActionController::class, 'unattend'])->name('requirements.unattend');
+    Route::post('/requirements/{requirement}/complete', [RequirementActionController::class, 'complete'])->name('requirements.complete');
 });
 
 // Admin routes
@@ -97,6 +113,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/members/export-csv', [Admin\MemberController::class, 'exportCsv'])->name('members.export-csv');
     Route::post('/members/import-csv', [Admin\MemberController::class, 'importCsv'])->name('members.import-csv');
 
+    Route::post('/requirements/{requirement}/attend-as', [RequirementActionController::class, 'attendAs'])->name('requirements.attend-as');
+    Route::delete('/requirements/{requirement}', [RequirementActionController::class, 'destroy'])->name('requirements.destroy');
+    Route::get('/requirements/{requirement}/viewers', [RequirementActionController::class, 'viewers'])->name('requirements.viewers');
 });
 
 // Executive member routes
@@ -183,6 +202,30 @@ Route::middleware(['auth', 'verified'])->prefix('my')->name('my.')->group(functi
     Route::post('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 });
+
+// Sitemap for search engines — lists the homepage and every active member's business page
+Route::get('/sitemap.xml', function () {
+    $urls = collect([
+        ['loc' => url('/'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'daily', 'priority' => '1.0'],
+    ]);
+
+    User::whereIn('role', ['general', 'executive'])
+        ->where('status', 'active')
+        ->whereNotNull('business_slug')
+        ->get(['business_slug', 'updated_at'])
+        ->each(function ($member) use ($urls) {
+            $urls->push([
+                'loc'        => route('business.show', $member->business_slug),
+                'lastmod'    => $member->updated_at->toAtomString(),
+                'changefreq' => 'weekly',
+                'priority'   => '0.7',
+            ]);
+        });
+
+    return response()
+        ->view('sitemap', ['urls' => $urls])
+        ->header('Content-Type', 'text/xml');
+})->name('sitemap');
 
 // Public questionnaire fill (no auth required)
 Route::get('/q/{slug}', [QuestionnaireResponseController::class, 'show'])->name('questionnaire.fill');

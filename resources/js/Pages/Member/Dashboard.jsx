@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import MemberProfileForm from '@/Components/MemberProfileForm';
+import RequirementsBoard from '@/Components/RequirementsBoard';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -89,7 +90,7 @@ function SuggestionModal({ onClose }) {
     );
 }
 
-export default function MemberDashboard({ profile, auth }) {
+export default function MemberDashboard({ profile, auth, requirements }) {
     const [showModal, setShowModal] = useState(false);
     const { flash } = usePage().props;
 
@@ -150,6 +151,12 @@ export default function MemberDashboard({ profile, auth }) {
                             {flash.success}
                         </div>
                     )}
+
+                    {/* Customer Requirements */}
+                    <div className="mb-6">
+                        <h3 className="mb-3 text-base font-bold text-gray-800">Customer Requirements</h3>
+                        <RequirementsBoard requirements={requirements} />
+                    </div>
 
                     <MemberProfileForm profile={profile} userName={auth.user.name} />
                 </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExecutiveAssignment;
 use App\Models\MemberProfile;
 use App\Models\Post;
+use App\Models\Requirement;
 use App\Models\User;
 use App\Models\UserPost;
 use Illuminate\Http\Request;
@@ -72,6 +73,7 @@ class DashboardController extends Controller
             'allMembers'         => $allMembers,
             'profile'            => $profile,
             'todaysCelebrations' => MemberProfile::todaysCelebrations(),
+            'requirements'       => Requirement::forBoard($user),
         ]);
     }
 }

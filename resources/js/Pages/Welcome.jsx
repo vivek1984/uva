@@ -1,5 +1,138 @@
-import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import SubmitRequirementModal from '@/Components/SubmitRequirementModal';
+
+function textMatches(text, q) {
+    return text?.toLowerCase().includes(q) ?? false;
+}
+
+/**
+ * A member's business page URL, carrying along the matched product name
+ * (if any) so that page can pre-fill its own product search on arrival.
+ */
+function businessUrlFor(member) {
+    if (!member.matchedProduct) return member.business_url;
+    return `${member.business_url}?product=${encodeURIComponent(member.matchedProduct.name)}`;
+}
+
+/**
+ * Matches on the member's own fields OR their published products.
+ * A product-only match is annotated with `matchedProduct` so the UI
+ * can explain why that member showed up ("product found with this dealer").
+ */
+function filterMembers(members, query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return members;
+
+    const results = [];
+    for (const m of members) {
+        const direct = textMatches(m.name, q) || textMatches(m.firm_name, q) || textMatches(m.firm_address, q);
+        if (direct) {
+            results.push({ ...m, matchedProduct: null });
+            continue;
+        }
+        const matchedProduct = m.products?.find(p => textMatches(p.name, q) || textMatches(p.category, q)) ?? null;
+        if (matchedProduct) {
+            results.push({ ...m, matchedProduct });
+        }
+    }
+    return results;
+}
+
+/* ── Search box with clickable results dropdown ──────────────── */
+function MemberSearchBox({ members, query, setQuery }) {
+    const [open, setOpen] = useState(false);
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        function onDocMouseDown(e) {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false);
+        }
+        document.addEventListener('mousedown', onDocMouseDown);
+        return () => document.removeEventListener('mousedown', onDocMouseDown);
+    }, []);
+
+    useEffect(() => {
+        function onKey(e) { if (e.key === 'Escape') setOpen(false); }
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, []);
+
+    const trimmed = query.trim();
+    const allMatches = trimmed ? filterMembers(members, query) : [];
+    const matches = allMatches.slice(0, 8);
+
+    return (
+        <div ref={wrapperRef} className="relative flex-1">
+            <svg className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+            </svg>
+            <input
+                type="text"
+                value={query}
+                onChange={e => { setQuery(e.target.value); setOpen(true); }}
+                onFocus={() => { if (query.trim()) setOpen(true); }}
+                placeholder="Search name, business, address or product…"
+                className="h-14 w-full rounded-2xl border-2 border-slate-200 bg-white pl-12 pr-11 text-base text-slate-900 placeholder-slate-400 shadow-md transition focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/20"
+            />
+            {query && (
+                <button onClick={() => { setQuery(''); setOpen(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            )}
+
+            {open && trimmed && (
+                <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-slate-200 bg-white py-1 shadow-xl">
+                    {matches.length === 0 ? (
+                        <p className="px-4 py-6 text-center text-sm text-slate-400">No members match "{query}"</p>
+                    ) : (
+                        <>
+                            {matches.map(m => (
+                                <a
+                                    key={m.id}
+                                    href={businessUrlFor(m)}
+                                    className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-indigo-50"
+                                >
+                                    <div className="flex h-9 w-9 flex-none items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
+                                        {m.photo_url ? (
+                                            <img src={m.photo_url} alt="" className="h-full w-full object-cover" />
+                                        ) : (
+                                            (m.firm_name ?? m.name).charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                    {m.matchedProduct ? (
+                                        <div className="min-w-0 flex-1">
+                                            <span className="mb-0.5 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                                                Product
+                                            </span>
+                                            <p className="truncate text-sm font-semibold text-slate-900">{m.matchedProduct.name}</p>
+                                            <p className="truncate text-xs text-slate-400">with {m.firm_name ?? m.name}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">{m.firm_name ?? m.name}</p>
+                                            <p className="truncate text-xs text-slate-400">
+                                                {m.firm_name ? m.name : ''}{m.firm_name && m.firm_address ? ' · ' : ''}{m.firm_address ?? ''}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <svg className="h-4 w-4 flex-none text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </a>
+                            ))}
+                            {allMatches.length > matches.length && (
+                                <p className="px-4 py-2 text-center text-xs text-slate-400">
+                                    +{allMatches.length - matches.length} more — see full results below
+                                </p>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
 
 /* ── Lightbox ──────────────────────────────────────────────── */
 function Lightbox({ images, startIndex, onClose }) {
@@ -143,26 +276,20 @@ function ExecutiveSection({ executives }) {
 /* ── Members directory ─────────────────────────────────────── */
 const PAGE_SIZE = 50;
 
-function MembersDirectory({ members }) {
-    const [query, setQuery] = useState('');
+function MembersDirectory({ members, query, setQuery }) {
     const [visible, setVisible] = useState(PAGE_SIZE);
+
+    // Reset pagination whenever the search query changes
+    useEffect(() => { setVisible(PAGE_SIZE); }, [query]);
+
     if (!members?.length) return null;
 
-    const q = query.trim().toLowerCase();
-    const filtered = q
-        ? members.filter(m =>
-            m.name?.toLowerCase().includes(q) ||
-            m.firm_name?.toLowerCase().includes(q) ||
-            m.firm_address?.toLowerCase().includes(q)
-          )
-        : members;
-
-    // Reset visible count whenever the search query changes
+    const filtered = filterMembers(members, query);
     const displayed = filtered.slice(0, visible);
     const hasMore = filtered.length > visible;
 
     return (
-        <section className="bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
+        <section id="directory" className="bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-6xl">
                 {/* Heading */}
                 <div className="mb-8 text-center">
@@ -171,25 +298,6 @@ function MembersDirectory({ members }) {
                     </span>
                     <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Our Members</h2>
                     <p className="mt-2 text-sm text-slate-500">Explore businesses run by our association members</p>
-                </div>
-
-                {/* Search */}
-                <div className="relative mx-auto mb-8 max-w-sm">
-                    <svg className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={e => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
-                        placeholder="Search name, business or address…"
-                        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                    {query && (
-                        <button onClick={() => { setQuery(''); setVisible(PAGE_SIZE); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    )}
                 </div>
 
                 {/* Card grid */}
@@ -204,7 +312,7 @@ function MembersDirectory({ members }) {
                             {displayed.map(member => (
                                 <a
                                     key={member.id}
-                                    href={member.business_url}
+                                    href={businessUrlFor(member)}
                                     className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80 transition hover:shadow-md hover:ring-indigo-200"
                                 >
                                     {/* Photo */}
@@ -221,6 +329,11 @@ function MembersDirectory({ members }) {
 
                                     {/* Info */}
                                     <div className="flex flex-1 flex-col p-3">
+                                        {member.matchedProduct && (
+                                            <span className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                🛍 {member.matchedProduct.name}
+                                            </span>
+                                        )}
                                         <p className="line-clamp-1 text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">
                                             {member.firm_name ?? member.name}
                                         </p>
@@ -246,7 +359,7 @@ function MembersDirectory({ members }) {
 
                         <p className="mt-5 text-center text-xs text-slate-400">
                             Showing {displayed.length} of {filtered.length} member{filtered.length !== 1 ? 's' : ''}
-                            {q && filtered.length < members.length && ` matching "${query}"`}
+                            {query.trim() && filtered.length < members.length && ` matching "${query}"`}
                         </p>
 
                         {hasMore && (
@@ -271,9 +384,44 @@ function MembersDirectory({ members }) {
 
 /* ── Main page ─────────────────────────────────────────────── */
 export default function Welcome({ canLogin, canRegister, sections = [], executives = [], members = [], auth }) {
+    const [query, setQuery] = useState('');
+    const [showRequirementModal, setShowRequirementModal] = useState(false);
+    const { flash } = usePage().props;
+
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const description = 'UVA Vyapari Welfare Association — uniting traders, empowering businesses, and building community. Search member businesses, explore products, or submit a requirement and get connected with a trusted local trader.';
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'UVA Vyapari Welfare Association',
+        alternateName: 'UVA',
+        url: siteUrl,
+        logo: `${siteUrl}/storage/logo.jpg`,
+        description,
+    };
+
     return (
         <>
-            <Head title="UVA Vyapari Welfare Association" />
+            <Head>
+                <title>UVA Vyapari Welfare Association</title>
+                <meta name="description" content={description} />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={siteUrl} />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="UVA Vyapari Welfare Association" />
+                <meta property="og:description" content={description} />
+                <meta property="og:url" content={siteUrl} />
+                <meta property="og:image" content={`${siteUrl}/storage/logo.jpg`} />
+                <meta property="og:site_name" content="UVA Vyapari Welfare Association" />
+
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:title" content="UVA Vyapari Welfare Association" />
+                <meta name="twitter:description" content={description} />
+                <meta name="twitter:image" content={`${siteUrl}/storage/logo.jpg`} />
+
+                <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+            </Head>
 
             <div className="min-h-[100dvh] bg-white text-slate-900 antialiased">
 
@@ -311,7 +459,7 @@ export default function Welcome({ canLogin, canRegister, sections = [], executiv
                     </div>
                 </nav>
 
-                {/* ── Hero ───────────────────────────────────── */}
+                {/* ── Hero (compact) ────────────────────────────── */}
                 <div className="relative isolate overflow-hidden bg-indigo-950">
                     {/* Background grid pattern */}
                     <div className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -320,70 +468,79 @@ export default function Welcome({ canLogin, canRegister, sections = [], executiv
                     <div className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
                     <div className="pointer-events-none absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
 
-                    <div className="relative mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
-                        {/* Logo badge */}
-                        <div className="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 shadow-2xl ring-1 ring-white/20 backdrop-blur-sm sm:h-24 sm:w-24">
-                            <img src="/storage/logo.jpg" alt="UVA" className="h-14 w-14 rounded-xl object-contain sm:h-16 sm:w-16" />
-                        </div>
-
-                        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                            UVA Vyapari<br className="hidden sm:block" /> Welfare Association
+                    <div className="relative mx-auto max-w-3xl px-4 pb-24 pt-10 text-center sm:px-6 sm:pb-28 sm:pt-14">
+                        <h1 className="text-xl font-extrabold tracking-tight text-white sm:text-3xl">
+                            UVA Vyapari Welfare Association
                         </h1>
-                        <p className="mx-auto mt-4 max-w-lg text-base text-indigo-300 sm:text-lg">
-                            Yuva at Heart — uniting traders, empowering businesses, building community.
+                        <p className="mx-auto mt-2 max-w-md text-sm text-indigo-300 sm:text-base">
+                            Uniting traders, empowering businesses, building community.
                         </p>
 
-                        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                            {auth?.user ? (
-                                <Link href={route('dashboard')} className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-white px-8 text-sm font-bold text-indigo-700 shadow-xl shadow-indigo-900/40 transition hover:bg-indigo-50 active:scale-95 sm:w-auto">
-                                    Go to Dashboard →
-                                </Link>
-                            ) : (
-                                <>
-                                    {canLogin && (
-                                        <Link href={route('login')} className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-white px-8 text-sm font-bold text-indigo-700 shadow-xl shadow-indigo-900/40 transition hover:bg-indigo-50 active:scale-95 sm:w-auto">
-                                            Member Login
-                                        </Link>
-                                    )}
-                                    {canRegister && (
-                                        <Link href={route('register')} className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-white/20 bg-white/10 px-8 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95 sm:w-auto">
-                                            Register Free
-                                        </Link>
-                                    )}
-                                </>
-                            )}
-                        </div>
+                        {auth?.user && (
+                            <Link href={route('dashboard')} className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-white px-6 text-sm font-bold text-indigo-700 shadow-lg shadow-indigo-900/40 transition hover:bg-indigo-50 active:scale-95">
+                                Go to Dashboard →
+                            </Link>
+                        )}
 
                         {/* Stats strip */}
                         {members.length > 0 && (
-                            <div className="mt-12 flex items-center justify-center gap-6 sm:gap-10">
-                                <div className="text-center">
-                                    <p className="text-2xl font-extrabold text-white sm:text-3xl">{members.length}+</p>
-                                    <p className="mt-0.5 text-xs text-indigo-400 uppercase tracking-wider">Members</p>
-                                </div>
-                                <div className="h-8 w-px bg-white/10" />
-                                <div className="text-center">
-                                    <p className="text-2xl font-extrabold text-white sm:text-3xl">{executives.length}</p>
-                                    <p className="mt-0.5 text-xs text-indigo-400 uppercase tracking-wider">Executives</p>
-                                </div>
-                                <div className="h-8 w-px bg-white/10" />
-                                <div className="text-center">
-                                    <p className="text-2xl font-extrabold text-white sm:text-3xl">1</p>
-                                    <p className="mt-0.5 text-xs text-indigo-400 uppercase tracking-wider">Association</p>
-                                </div>
+                            <div className="mt-5 flex items-center justify-center gap-4 text-xs uppercase tracking-wider text-indigo-400">
+                                <span><strong className="text-sm font-bold text-white">{members.length}+</strong> Members</span>
+                                <span className="h-3 w-px bg-white/10" />
+                                <span><strong className="text-sm font-bold text-white">{executives.length}</strong> Executives</span>
+                                <span className="h-3 w-px bg-white/10" />
+                                <span><strong className="text-sm font-bold text-white">1</strong> Association</span>
                             </div>
                         )}
                     </div>
-
-                    {/* Bottom fade into next section */}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/5" />
                 </div>
+
+                {/* ── Search hub — the primary CTA, floating over the hero ── */}
+                <div className="relative z-10 -mt-16 mb-10 px-4 sm:-mt-20 sm:mb-14 sm:px-6">
+                    <div className="mx-auto max-w-2xl rounded-3xl bg-white p-5 shadow-2xl ring-1 ring-slate-900/5 sm:p-7">
+                        <p className="mb-4 text-center text-sm font-semibold text-slate-600">
+                            Looking for a trusted business, or need something done?
+                        </p>
+
+                        {flash?.success && (
+                            <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-center text-sm font-medium text-green-700">
+                                {flash.success}
+                            </div>
+                        )}
+
+                        <div className="flex flex-col items-stretch gap-3 sm:flex-row">
+                            <MemberSearchBox members={members} query={query} setQuery={setQuery} />
+                            <button
+                                onClick={() => setShowRequirementModal(true)}
+                                className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-md shadow-indigo-600/30 transition hover:bg-indigo-700 active:scale-95"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                </svg>
+                                Submit Requirement
+                            </button>
+                        </div>
+
+                        {!auth?.user && (
+                            <p className="mt-4 text-center text-xs text-slate-400">
+                                Are you a trader?{' '}
+                                {canLogin && <Link href={route('login')} className="font-semibold text-indigo-600 hover:underline">Member Login</Link>}
+                                {canLogin && canRegister && ' · '}
+                                {canRegister && <Link href={route('register')} className="font-semibold text-indigo-600 hover:underline">Register Free</Link>}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {showRequirementModal && (
+                    <SubmitRequirementModal onClose={() => setShowRequirementModal(false)} />
+                )}
 
                 {/* ── Executive committee ────────────────────── */}
                 <ExecutiveSection executives={executives} />
 
                 {/* ── Members directory ──────────────────────── */}
-                <MembersDirectory members={members} />
+                <MembersDirectory members={members} query={query} setQuery={setQuery} />
 
                 {/* ── Dynamic sections ───────────────────────── */}
                 {sections.length > 0 && (

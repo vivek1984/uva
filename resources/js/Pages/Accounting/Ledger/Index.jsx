@@ -340,17 +340,17 @@ function MemberRow({ m }) {
     return (
         <Link
             href={route('accounting.ledger.member', m.id)}
-            className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 transition-colors"
         >
-            <div>
-                <p className="text-sm font-medium text-gray-800">{m.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                    {m.firm_name && <span className="text-xs text-gray-400">{m.firm_name}</span>}
-                    <span className={`text-xs font-medium ${m.role === 'executive' ? 'text-purple-600' : 'text-blue-500'}`}>{m.role}</span>
-                    {m.status === 'non-active' && <span className="text-xs text-gray-400">(inactive)</span>}
+            <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-gray-800">{m.name}</p>
+                <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    {m.firm_name && <span className="truncate text-xs text-gray-400">{m.firm_name}</span>}
+                    <span className={`flex-none text-xs font-medium ${m.role === 'executive' ? 'text-purple-600' : 'text-blue-500'}`}>{m.role}</span>
+                    {m.status === 'non-active' && <span className="flex-none text-xs text-gray-400">(inactive)</span>}
                 </div>
             </div>
-            <div className="text-right">
+            <div className="flex-none text-right">
                 <p className={`font-semibold ${isOwed ? 'text-red-600' : 'text-green-600'}`}>
                     {isOwed ? '−' : '+'}₹{Math.abs(m.outstanding).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>

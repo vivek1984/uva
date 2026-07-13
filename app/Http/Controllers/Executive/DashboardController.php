@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Executive;
 use App\Http\Controllers\Controller;
 use App\Models\ExecutiveAssignment;
 use App\Models\MemberProfile;
+use App\Models\Requirement;
 use App\Models\Suggestion;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -71,6 +72,7 @@ class DashboardController extends Controller
             'todaysCelebrations'  => MemberProfile::todaysCelebrations(),
             'suggestions'         => $suggestions,
             'unreadSuggestions'   => $suggestions->where('is_read', false)->count(),
+            'requirements'        => Requirement::forBoard($user),
         ]);
     }
 

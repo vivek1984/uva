@@ -70,13 +70,13 @@ function ExpenseForm({ fy, categories, initial = {}, onSuccess, onCancel, submit
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" required />
                 </div>
 
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                     <label className="mb-1 block text-sm font-medium text-gray-700">Date <span className="text-red-500">*</span></label>
                     <input type="date" value={data.expense_date} onChange={e => setData('expense_date', e.target.value)}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" required />
                 </div>
 
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                     <label className="mb-1 block text-sm font-medium text-gray-700">Payment Mode <span className="text-red-500">*</span></label>
                     <select value={data.payment_mode} onChange={e => setData('payment_mode', e.target.value)}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
@@ -197,42 +197,26 @@ export default function Expenses({ fy, current_fy, all_years, can_edit, categori
                                 <tr><td colSpan={7} className="px-5 py-8 text-center text-gray-400">No expenses recorded for this period.</td></tr>
                             )}
                             {expenses.map(e => (
-                                <>
-                                    <tr key={e.id}>
-                                        <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{e.expense_date}</td>
-                                        <td className="px-4 py-3">
-                                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">{e.category}</span>
+                                <tr key={e.id} className={editing?.id === e.id ? 'bg-indigo-50' : ''}>
+                                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{e.expense_date}</td>
+                                    <td className="px-4 py-3">
+                                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">{e.category}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-800">{e.description}</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-red-600">
+                                        ₹{Number(e.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{modeLabel(e.payment_mode)}</td>
+                                    <td className="px-4 py-3 text-gray-400">{e.recorded_by}</td>
+                                    {can_edit && (
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                                            <button onClick={() => setEditing(editing?.id === e.id ? null : e)}
+                                                className="mr-2 text-xs font-medium text-indigo-600 hover:underline">Edit</button>
+                                            <button onClick={() => deleteExpense(e.id)}
+                                                className="text-xs font-medium text-red-500 hover:underline">Delete</button>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-800">{e.description}</td>
-                                        <td className="px-4 py-3 text-right font-semibold text-red-600">
-                                            ₹{Number(e.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{modeLabel(e.payment_mode)}</td>
-                                        <td className="px-4 py-3 text-gray-400">{e.recorded_by}</td>
-                                        {can_edit && (
-                                            <td className="px-4 py-3 text-right whitespace-nowrap">
-                                                <button onClick={() => setEditing(editing?.id === e.id ? null : e)}
-                                                    className="mr-2 text-xs font-medium text-indigo-600 hover:underline">Edit</button>
-                                                <button onClick={() => deleteExpense(e.id)}
-                                                    className="text-xs font-medium text-red-500 hover:underline">Delete</button>
-                                            </td>
-                                        )}
-                                    </tr>
-                                    {editing?.id === e.id && (
-                                        <tr key={`edit-${e.id}`}>
-                                            <td colSpan={7} className="bg-indigo-50 px-5 py-4">
-                                                <ExpenseForm
-                                                    fy={fy}
-                                                    categories={categories}
-                                                    initial={editing}
-                                                    onSuccess={() => setEditing(null)}
-                                                    onCancel={() => setEditing(null)}
-                                                    submitLabel="Save Changes"
-                                                />
-                                            </td>
-                                        </tr>
                                     )}
-                                </>
+                                </tr>
                             ))}
                         </tbody>
                         {expenses.length > 0 && (
@@ -248,6 +232,25 @@ export default function Expenses({ fy, current_fy, all_years, can_edit, categori
                         )}
                     </table>
                 </div>
+
+                {/* Edit expense panel — rendered outside the scrollable table so the form stays full mobile width */}
+                {editing && (
+                    <div className="rounded-xl border bg-indigo-50 shadow-sm">
+                        <div className="border-b border-indigo-100 px-5 py-3">
+                            <h3 className="font-semibold text-gray-800">Editing: {editing.description}</h3>
+                        </div>
+                        <div className="px-5 py-4">
+                            <ExpenseForm
+                                fy={fy}
+                                categories={categories}
+                                initial={editing}
+                                onSuccess={() => setEditing(null)}
+                                onCancel={() => setEditing(null)}
+                                submitLabel="Save Changes"
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </AccountingLayout>
     );

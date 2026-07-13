@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import MemberProfileForm from '@/Components/MemberProfileForm';
+import RequirementsBoard from '@/Components/RequirementsBoard';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -12,7 +13,7 @@ function StatusBadge({ status }) {
 function MemberRow({ member, onToggleManage, onToggleStatus, canToggleStatus }) {
     const isManaged = member.is_managed_by_me;
     return (
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 min-w-0">
                 <div className={`flex h-9 w-9 flex-none items-center justify-center rounded-full text-sm font-semibold ${isManaged ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
                     {member.name.charAt(0).toUpperCase()}
@@ -25,7 +26,7 @@ function MemberRow({ member, onToggleManage, onToggleStatus, canToggleStatus }) 
                     </div>
                 </div>
             </div>
-            <div className="flex items-center gap-2 ml-3 flex-none">
+            <div className="flex flex-wrap items-center gap-2 sm:ml-3 sm:flex-none">
                 {canToggleStatus && member.status !== 'active' && (
                     <button
                         onClick={() => onToggleStatus(member)}
@@ -130,14 +131,15 @@ function CelebrationsPanel({ celebrations }) {
     );
 }
 
-export default function ExecutiveDashboard({ heldPost, allGeneralMembers, profile, auth, todaysCelebrations, suggestions, unreadSuggestions }) {
+export default function ExecutiveDashboard({ heldPost, allGeneralMembers, profile, auth, todaysCelebrations, suggestions, unreadSuggestions, requirements }) {
     const [activeTab, setActiveTab] = useState('members');
     const [localUnread, setLocalUnread] = useState(unreadSuggestions ?? 0);
 
     const tabs = [
-        { key: 'members',     label: 'Manage Members', icon: '👥' },
-        { key: 'suggestions', label: 'Suggestions',    icon: '💬' },
-        { key: 'profile',     label: 'My Profile',     icon: '👤' },
+        { key: 'members',      label: 'Manage Members', icon: '👥' },
+        { key: 'requirements', label: 'Requirements',   icon: '📋' },
+        { key: 'suggestions',  label: 'Suggestions',    icon: '💬' },
+        { key: 'profile',      label: 'My Profile',     icon: '👤' },
     ];
 
     const myMembers = allGeneralMembers.filter((m) => m.is_managed_by_me);
@@ -287,6 +289,11 @@ export default function ExecutiveDashboard({ heldPost, allGeneralMembers, profil
                                 </div>
                             )}
                         </div>
+                    )}
+
+                    {/* Requirements Tab */}
+                    {activeTab === 'requirements' && (
+                        <RequirementsBoard requirements={requirements} />
                     )}
 
                     {/* Suggestions Tab */}

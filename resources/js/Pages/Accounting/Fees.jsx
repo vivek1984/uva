@@ -46,11 +46,11 @@ function RecordModal({ member, fy, structure, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => e.target === e.currentTarget && onClose()}>
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-                <h3 className="mb-4 text-lg font-bold text-gray-900">Record Payment — {member.name}</h3>
-                <form onSubmit={submit} className="space-y-3">
-                    <div className="flex gap-3">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4 sm:items-center sm:pb-0" onClick={e => e.target === e.currentTarget && onClose()}>
+            <div className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-2xl">
+                <h3 className="flex-none px-6 pt-6 text-lg font-bold text-gray-900">Record Payment — {member.name}</h3>
+                <form onSubmit={submit} className="flex-1 space-y-3 overflow-y-auto px-6 py-4">
+                    <div className="flex flex-wrap gap-3">
                         {availableFeeTypes.map(t => (
                             <label key={t} className="flex cursor-pointer items-center gap-2">
                                 <input type="radio" checked={data.fee_type === t} onChange={() => handleFeeType(t)} className="text-indigo-600" />
@@ -179,13 +179,13 @@ export default function Fees({ fy, current_fy, all_years, can_edit, structure, m
                 )}
 
                 <div className="rounded-xl border bg-white shadow-sm">
-                    <div className="flex items-center justify-between gap-3 border-b px-5 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
                         <input
                             type="text"
                             placeholder="Search member or firm…"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-64 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 sm:w-64"
                         />
                         {structure && (
                             <p className="text-xs text-gray-400">

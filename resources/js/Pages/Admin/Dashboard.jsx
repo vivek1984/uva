@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import MemberProfileForm from '@/Components/MemberProfileForm';
+import RequirementsBoard from '@/Components/RequirementsBoard';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -57,7 +58,7 @@ const Badge = ({ role }) => {
     );
 };
 
-export default function AdminDashboard({ stats, posts, executives, generalMembers, allMembers, profile, auth, todaysCelebrations }) {
+export default function AdminDashboard({ stats, posts, executives, generalMembers, allMembers, profile, auth, todaysCelebrations, requirements }) {
     const [activeTab, setActiveTab] = useState('overview');
     const { flash } = usePage().props;
     const csvInputRef = useRef(null);
@@ -76,10 +77,11 @@ export default function AdminDashboard({ stats, posts, executives, generalMember
     }
 
     const tabs = [
-        { key: 'overview',  label: 'Overview',      icon: '📊' },
-        { key: 'posts',     label: 'Posts',          icon: '🏷️' },
-        { key: 'members',   label: 'Members',        icon: '👥' },
-        { key: 'profile',   label: 'My Profile',     icon: '👤' },
+        { key: 'overview',     label: 'Overview',      icon: '📊' },
+        { key: 'posts',        label: 'Posts',          icon: '🏷️' },
+        { key: 'members',      label: 'Members',        icon: '👥' },
+        { key: 'requirements', label: 'Requirements',   icon: '📋' },
+        { key: 'profile',      label: 'My Profile',     icon: '👤' },
     ];
 
     return (
@@ -239,6 +241,15 @@ export default function AdminDashboard({ stats, posts, executives, generalMember
                                 )}
                             </div>
                         </div>
+                    )}
+
+                    {/* Requirements Tab */}
+                    {activeTab === 'requirements' && (
+                        <RequirementsBoard
+                            requirements={requirements}
+                            isAdmin
+                            attendableMembers={allMembers.filter(m => m.status === 'active' && m.role !== 'admin')}
+                        />
                     )}
 
                     {/* Profile Tab */}

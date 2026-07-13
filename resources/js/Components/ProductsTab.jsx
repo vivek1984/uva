@@ -83,19 +83,19 @@ function ProductCard({ product, onEdit, onDelete, businessSlug }) {
                         href={route('business.show', businessSlug)}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-center text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                        className="flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-indigo-50 px-3 text-center text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
                     >
                         View Page
                     </a>
                     <button
                         onClick={() => onEdit(product)}
-                        className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                        className="min-h-[40px] rounded-lg bg-gray-100 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-200"
                     >
                         Edit
                     </button>
                     <button
                         onClick={() => onDelete(product)}
-                        className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100"
+                        className="min-h-[40px] rounded-lg bg-red-50 px-3 text-xs font-semibold text-red-600 hover:bg-red-100"
                     >
                         Delete
                     </button>
@@ -114,7 +114,7 @@ function ExistingPhotoTile({ photo, markedForDelete, onToggle }) {
             <button
                 type="button"
                 onClick={() => onToggle(photo.id)}
-                className={`absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow ${markedForDelete ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
+                className={`absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow before:absolute before:-inset-2 before:content-[''] ${markedForDelete ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
             >
                 {markedForDelete ? '↩' : '✕'}
             </button>
@@ -296,7 +296,7 @@ function ProductModal({ product, onClose }) {
                                         <button
                                             type="button"
                                             onClick={() => removeNewPhoto(i)}
-                                            className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow"
+                                            className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow before:absolute before:-inset-2 before:content-['']"
                                         >
                                             ✕
                                         </button>
