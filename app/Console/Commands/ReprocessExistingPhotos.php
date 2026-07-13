@@ -15,6 +15,14 @@ class ReprocessExistingPhotos extends Command
 
     public function handle(): void
     {
+        // GD decodes images to an uncompressed bitmap in memory — a modern
+        // phone photo (12-48MP) can need 100-300MB+ just to load, briefly
+        // alongside a resized copy too. The default CLI memory_limit (often
+        // 64M on shared hosting) isn't enough for that, and PHP's "allowed
+        // memory size exhausted" fatal can't be caught by try/catch, so this
+        // must be raised before any image work happens.
+        ini_set('memory_limit', '512M');
+
         $dryRun = (bool) $this->option('dry-run');
 
         $profiles = MemberProfile::query()

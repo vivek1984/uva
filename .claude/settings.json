@@ -7,7 +7,10 @@
       "Bash(php -l app/Console/Commands/ReprocessExistingPhotos.php)",
       "Bash(nohup google-chrome --headless=new --disable-gpu --no-sandbox --user-data-dir=/tmp/claude-1000/-var-www-uva/5b8fa516-a245-49b6-88c8-553837f68ca2/scratchpad/chrome-finalcheck --remote-debugging-port=9235 --window-size=1440,1400 about:blank)",
       "Bash(curl -s http://127.0.0.1:9235/json/version)",
-      "Bash(pkill -f \"remote-debugging-port=9235\")"
+      "Bash(pkill -f \"remote-debugging-port=9235\")",
+      "Bash(php -d memory_limit=512M -r ' *)",
+      "Bash(php -d memory_limit=64M /tmp/claude-1000/-var-www-uva/5b8fa516-a245-49b6-88c8-553837f68ca2/scratchpad/memtest/crop_test.php)",
+      "Bash(git -C /var/www/uva diff .claude/settings.json)"
     ]
   }
 }
