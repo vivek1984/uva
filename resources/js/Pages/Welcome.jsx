@@ -316,7 +316,7 @@ function MembersDirectory({ members, query, setQuery }) {
                                     className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80 transition hover:shadow-md hover:ring-indigo-200"
                                 >
                                     {/* Photo */}
-                                    <div className="relative h-28 bg-gradient-to-br from-indigo-100 to-indigo-50 sm:h-36">
+                                    <div className="relative aspect-square bg-gradient-to-br from-indigo-100 to-indigo-50">
                                         {member.photo_url ? (
                                             <img src={member.photo_url} alt={member.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                                         ) : (

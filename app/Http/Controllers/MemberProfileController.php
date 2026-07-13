@@ -45,14 +45,18 @@ class MemberProfileController extends Controller
         if ($request->hasFile('photo')) {
             $existing = MemberProfile::where('user_id', $user->id)->value('photo');
             if ($existing) Storage::disk('public')->delete($existing);
-            $photoPath = ImageService::storeAsWebp($request->file('photo'), 'member-photos');
+            // Square crop — this photo is displayed as a fixed-size avatar/thumbnail
+            // (member card, executive avatar, business page), so a consistent
+            // shape matters more than preserving whatever the phone camera shot.
+            $photoPath = ImageService::storeAsWebpCropped($request->file('photo'), 'member-photos', 800, 800);
         }
 
         $firmPhotoPath = null;
         if ($request->hasFile('firm_photo')) {
             $existing = MemberProfile::where('user_id', $user->id)->value('firm_photo');
             if ($existing) Storage::disk('public')->delete($existing);
-            $firmPhotoPath = ImageService::storeAsWebp($request->file('firm_photo'), 'firm-photos');
+            // Landscape crop for the business page banner.
+            $firmPhotoPath = ImageService::storeAsWebpCropped($request->file('firm_photo'), 'firm-photos', 1200, 675);
         }
 
         $profile = MemberProfile::updateOrCreate(
