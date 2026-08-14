@@ -16,7 +16,11 @@ class BusinessPageController extends Controller
             ->with('photos')
             ->orderByDesc('created_at')
             ->get()
-            ->map->toCardData()
+            ->map(fn ($product) => $product->toCardData() + [
+                'page_url' => $product->slug
+                    ? route('product.show', [$user->business_slug, $product->slug])
+                    : null,
+            ])
             ->values();
 
         $canonicalUrl = route('business.show', $user->business_slug);

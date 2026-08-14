@@ -13,6 +13,14 @@ function formatPrice(price) {
     return '₹' + price;
 }
 
+function slugify(value) {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 // ─── Photo strip in product card ──────────────────────────────────────────────
 
 function PhotoStrip({ photos }) {
@@ -80,12 +88,12 @@ function ProductCard({ product, onEdit, onDelete, businessSlug }) {
                 )}
                 <div className="mt-4 flex items-center gap-2">
                     <a
-                        href={route('business.show', businessSlug)}
+                        href={product.page_url ?? route('business.show', businessSlug)}
                         target="_blank"
                         rel="noreferrer"
                         className="flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-indigo-50 px-3 text-center text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
                     >
-                        View Page
+                        View
                     </a>
                     <button
                         onClick={() => onEdit(product)}
@@ -124,7 +132,7 @@ function ExistingPhotoTile({ photo, markedForDelete, onToggle }) {
 
 // ─── Add / Edit modal ─────────────────────────────────────────────────────────
 
-function ProductModal({ product, onClose }) {
+function ProductModal({ product, businessSlug, onClose }) {
     const isEdit = !!product;
     const fileRef = useRef(null);
     const [newPhotoFiles, setNewPhotoFiles]       = useState([]);
@@ -134,6 +142,7 @@ function ProductModal({ product, onClose }) {
 
     const { data, setData, processing, errors, reset } = useForm({
         name:         product?.name ?? '',
+        slug:         product?.slug ?? '',
         description:  product?.description ?? '',
         price:        product?.price ?? '',
         category:     product?.category ?? '',
@@ -167,6 +176,7 @@ function ProductModal({ product, onClose }) {
     function buildFormData() {
         const fd = new FormData();
         fd.append('name', data.name);
+        fd.append('slug', data.slug ?? '');
         fd.append('description', data.description ?? '');
         fd.append('price', data.price ?? '');
         fd.append('category', data.category ?? '');
@@ -219,11 +229,33 @@ function ProductModal({ product, onClose }) {
                         <input
                             type="text"
                             value={data.name}
-                            onChange={e => setData('name', e.target.value)}
+                            onChange={e => {
+                                const nextName = e.target.value;
+                                setData('name', nextName);
+                                if (!isEdit) setData('slug', slugify(nextName));
+                            }}
                             placeholder="e.g. Premium Cotton Saree"
                             className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                         {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+                    </div>
+
+                    {/* Slug */}
+                    <div>
+                        <label className="mb-1.5 block text-sm font-semibold text-gray-700">Product URL Slug</label>
+                        <div className="flex rounded-xl border border-gray-200 bg-gray-50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20">
+                            <span className="flex items-center border-r border-gray-200 px-3 text-xs text-gray-400">
+                                /{businessSlug}/
+                            </span>
+                            <input
+                                type="text"
+                                value={data.slug}
+                                onChange={e => setData('slug', slugify(e.target.value))}
+                                placeholder="premium-cotton-saree"
+                                className="h-11 min-w-0 flex-1 border-0 bg-transparent px-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0"
+                            />
+                        </div>
+                        {errors.slug && <p className="mt-1 text-xs text-red-500">{errors.slug}</p>}
                     </div>
 
                     {/* Price + Category */}
@@ -481,8 +513,8 @@ export default function ProductsTab({ products, businessSlug }) {
             )}
 
             {/* Modals */}
-            {showAdd && <ProductModal onClose={() => setShowAdd(false)} />}
-            {editProduct && <ProductModal product={editProduct} onClose={() => setEditProduct(null)} />}
+            {showAdd && <ProductModal businessSlug={businessSlug} onClose={() => setShowAdd(false)} />}
+            {editProduct && <ProductModal product={editProduct} businessSlug={businessSlug} onClose={() => setEditProduct(null)} />}
             {deleteProduct && <DeleteModal product={deleteProduct} onClose={() => setDeleteProduct(null)} />}
         </div>
     );

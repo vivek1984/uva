@@ -12,6 +12,7 @@ function textMatches(text, q) {
  */
 function businessUrlFor(member) {
     if (!member.matchedProduct) return member.business_url;
+    if (member.matchedProduct.page_url) return member.matchedProduct.page_url;
     return `${member.business_url}?product=${encodeURIComponent(member.matchedProduct.name)}`;
 }
 
@@ -389,7 +390,7 @@ export default function Welcome({ canLogin, canRegister, sections = [], executiv
     const { flash } = usePage().props;
 
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const description = 'UVA Vyapari Welfare Association — uniting traders, empowering businesses, and building community. Search member businesses, explore products, or submit a requirement and get connected with a trusted local trader.';
+    const description = 'UVA Vyapari Welfare Association — We are a group of wholesalers, distributors, and retailers of various products. Search member businesses, explore products, or submit a requirement and get connected with a trusted local trader.';
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
@@ -473,7 +474,7 @@ export default function Welcome({ canLogin, canRegister, sections = [], executiv
                             UVA Vyapari Welfare Association
                         </h1>
                         <p className="mx-auto mt-2 max-w-md text-sm text-indigo-300 sm:text-base">
-                            Uniting traders, empowering businesses, building community.
+                            We are a group of wholesalers, distributors, and retailers of various products.
                         </p>
 
                         {auth?.user && (

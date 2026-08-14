@@ -9,6 +9,7 @@ use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\Member;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionnaireController;
 use App\Http\Controllers\QuestionnaireResponseController;
@@ -61,7 +62,9 @@ Route::get('/', function () {
             'products'         => $u->products->map(fn ($p) => [
                 'id'       => $p->id,
                 'name'     => $p->name,
+                'slug'     => $p->slug,
                 'category' => $p->category,
+                'page_url' => $p->slug ? route('product.show', [$u->business_slug, $p->slug]) : null,
             ])->values(),
         ])
         ->shuffle($daySeed)
@@ -212,6 +215,7 @@ Route::get('/sitemap.xml', function () {
     User::whereIn('role', ['general', 'executive'])
         ->where('status', 'active')
         ->whereNotNull('business_slug')
+        ->with(['products' => fn ($q) => $q->where('is_published', true)->whereNotNull('slug')])
         ->get(['business_slug', 'updated_at'])
         ->each(function ($member) use ($urls) {
             $urls->push([
@@ -220,6 +224,15 @@ Route::get('/sitemap.xml', function () {
                 'changefreq' => 'weekly',
                 'priority'   => '0.7',
             ]);
+
+            $member->products->each(function ($product) use ($member, $urls) {
+                $urls->push([
+                    'loc'        => route('product.show', [$member->business_slug, $product->slug]),
+                    'lastmod'    => $product->updated_at->toAtomString(),
+                    'changefreq' => 'weekly',
+                    'priority'   => '0.6',
+                ]);
+            });
         });
 
     return response()
@@ -233,6 +246,12 @@ Route::get('/q/{slug}/prefill', [QuestionnaireResponseController::class, 'prefil
 Route::post('/q/{slug}', [QuestionnaireResponseController::class, 'store'])->name('questionnaire.respond');
 
 require __DIR__ . '/auth.php';
+
+// Public product showcase — registered before the single-segment business catch-all
+Route::scopeBindings()
+    ->get('/{user:business_slug}/{product:slug}', [ProductPageController::class, 'show'])
+    ->where(['user' => '[a-z0-9-]+', 'product' => '[a-z0-9-]+'])
+    ->name('product.show');
 
 // Public business showcase — registered LAST so it never shadows any named route
 Route::get('/{user:business_slug}', [BusinessPageController::class, 'show'])->name('business.show');

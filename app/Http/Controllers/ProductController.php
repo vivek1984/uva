@@ -7,6 +7,7 @@ use App\Models\ProductPhoto;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -18,7 +19,11 @@ class ProductController extends Controller
             ->with('photos')
             ->orderByDesc('created_at')
             ->get()
-            ->map->toCardData()
+            ->map(fn ($product) => $product->toCardData() + [
+                'page_url' => $product->slug
+                    ? route('product.show', [$user->business_slug, $product->slug])
+                    : null,
+            ])
             ->values();
 
         return \Inertia\Inertia::render('MyProducts', [
@@ -31,6 +36,13 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name'         => 'required|string|max:255',
+            'slug'         => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::unique('products', 'slug')->where(fn ($q) => $q->where('user_id', $request->user()->id)),
+            ],
             'description'  => 'nullable|string',
             'price'        => 'nullable|string|max:50',
             'category'     => 'nullable|string|max:100',
@@ -41,6 +53,7 @@ class ProductController extends Controller
 
         $product = $request->user()->products()->create([
             'name'         => $data['name'],
+            'slug'         => ($data['slug'] ?? null) ?: Product::generateSlug($request->user()->id, $data['name']),
             'description'  => $data['description'] ?? null,
             'price'        => $data['price'] ?? null,
             'category'     => $data['category'] ?? null,
@@ -63,8 +76,17 @@ class ProductController extends Controller
 
         $data = $request->validate([
             'name'              => 'required|string|max:255',
+            'slug'              => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::unique('products', 'slug')
+                    ->where(fn ($q) => $q->where('user_id', $request->user()->id))
+                    ->ignore($product->id),
+            ],
             'description'       => 'nullable|string',
-            'price'             => 'nullable|numeric|min:0',
+            'price'             => 'nullable|string|max:50',
             'category'          => 'nullable|string|max:100',
             'is_published'      => 'boolean',
             'photos'            => 'nullable|array|max:10',
@@ -75,6 +97,7 @@ class ProductController extends Controller
 
         $product->update([
             'name'         => $data['name'],
+            'slug'         => ($data['slug'] ?? null) ?: ($product->slug ?: Product::generateSlug($request->user()->id, $data['name'], $product->id)),
             'description'  => $data['description'] ?? null,
             'price'        => $data['price'] ?? null,
             'category'     => $data['category'] ?? null,

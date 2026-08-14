@@ -16,6 +16,52 @@ function whatsappLink(number, text = '') {
     return `https://wa.me/${num}${text ? '?text=' + encodeURIComponent(text) : ''}`;
 }
 
+function ShareButton({ url, title }) {
+    const handleShare = async () => {
+        const shareData = {
+            title,
+            text: `Check out ${title}`,
+            url,
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+                return;
+            }
+
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(url);
+                window.alert('Business page link copied to clipboard.');
+                return;
+            }
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            if (error?.name !== 'AbortError') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, '_blank', 'noopener,noreferrer');
+            }
+        }
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={handleShare}
+            aria-label="Share business page"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+        >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="18" cy="5" r="2.5" strokeWidth="1.8" />
+                <circle cx="6" cy="12" r="2.5" strokeWidth="1.8" />
+                <circle cx="18" cy="19" r="2.5" strokeWidth="1.8" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8.4 11.1l7.1-4.4M8.4 12.9l7.1 4.4" />
+            </svg>
+            Share
+        </button>
+    );
+}
+
 /* ── Photo carousel ────────────────────────────────────────── */
 function PhotoCarousel({ photos, productName }) {
     const [current, setCurrent] = useState(0);
@@ -74,10 +120,17 @@ function ProductCard({ product, whatsapp }) {
     const waLink = whatsapp
         ? whatsappLink(whatsapp, `Hi! I'm interested in "${product.name}". Please share more details.`)
         : null;
+    const detailUrl = product.page_url ?? null;
 
     return (
         <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
-            <PhotoCarousel photos={product.photos} productName={product.name} />
+            {detailUrl ? (
+                <a href={detailUrl} className="block focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <PhotoCarousel photos={product.photos} productName={product.name} />
+                </a>
+            ) : (
+                <PhotoCarousel photos={product.photos} productName={product.name} />
+            )}
 
             <div className="flex flex-1 flex-col p-5">
                 <div className="flex-1">
@@ -86,7 +139,13 @@ function ProductCard({ product, whatsapp }) {
                             {product.category}
                         </span>
                     )}
-                    <h3 className="text-base font-bold text-gray-900">{product.name}</h3>
+                    {detailUrl ? (
+                        <a href={detailUrl} className="block text-base font-bold text-gray-900 hover:text-indigo-700">
+                            {product.name}
+                        </a>
+                    ) : (
+                        <h3 className="text-base font-bold text-gray-900">{product.name}</h3>
+                    )}
                     {product.description && (
                         <p className="mt-2 text-sm leading-relaxed text-gray-600">{product.description}</p>
                     )}
@@ -117,6 +176,15 @@ function ProductCard({ product, whatsapp }) {
                         <span className="text-xs text-gray-400">No contact set</span>
                     )}
                 </div>
+
+                {detailUrl && (
+                    <a
+                        href={detailUrl}
+                        className="mt-3 inline-flex h-10 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-bold text-indigo-700 transition hover:bg-indigo-100"
+                    >
+                        View Details
+                    </a>
+                )}
             </div>
         </div>
     );
@@ -200,7 +268,7 @@ function SeoHead({ member, products }) {
                     price: numericPrice,
                     priceCurrency: 'INR',
                     availability: 'https://schema.org/InStock',
-                    url,
+                    url: p.page_url ?? url,
                 },
             }),
         };
@@ -280,20 +348,23 @@ export default function BusinessPage({ member, products }) {
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                             UVA Members
                         </a>
-                        {generalWaLink && (
-                            <a
-                                href={generalWaLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-600 transition"
-                            >
-                                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.851L.057 23.943l6.306-1.454A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.652-.52-5.166-1.427l-.371-.22-3.741.863.944-3.617-.243-.387A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                                </svg>
-                                WhatsApp
-                            </a>
-                        )}
+                        <div className="flex items-center gap-2">
+                            <ShareButton url={member.page_url} title={member.firm_name ?? member.name} />
+                            {generalWaLink && (
+                                <a
+                                    href={generalWaLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-600 transition"
+                                >
+                                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.851L.057 23.943l6.306-1.454A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.652-.52-5.166-1.427l-.371-.22-3.741.863.944-3.617-.243-.387A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                                    </svg>
+                                    WhatsApp
+                                </a>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -308,16 +379,16 @@ export default function BusinessPage({ member, products }) {
                     )}
 
                     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-                        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                        <div className="flex items-start gap-4 sm:gap-5">
                             {/* Avatar */}
                             {member.photo_url ? (
                                 <img
                                     src={member.photo_url}
                                     alt={member.name}
-                                    className="h-24 w-24 flex-none rounded-2xl object-cover shadow-md"
+                                    className="h-20 w-20 flex-none rounded-2xl object-cover shadow-md sm:h-24 sm:w-24"
                                 />
                             ) : (
-                                <div className="flex h-24 w-24 flex-none items-center justify-center rounded-2xl bg-indigo-600 text-3xl font-extrabold text-white shadow-md">
+                                <div className="flex h-20 w-20 flex-none items-center justify-center rounded-2xl bg-indigo-600 text-2xl font-extrabold text-white shadow-md sm:h-24 sm:w-24 sm:text-3xl">
                                     {(member.firm_name ?? member.name).charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -325,11 +396,11 @@ export default function BusinessPage({ member, products }) {
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 {member.firm_name && (
-                                    <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+                                    <h1 className="text-xl font-extrabold text-gray-900 sm:text-3xl">
                                         M/s {member.firm_name}
                                     </h1>
                                 )}
-                                <p className={`font-semibold text-gray-500 ${!member.firm_name ? 'text-2xl text-gray-900' : 'text-base'}`}>
+                                <p className={`font-semibold text-gray-500 ${!member.firm_name ? 'text-xl text-gray-900 sm:text-2xl' : 'text-sm sm:text-base'}`}>
                                     {member.name}
                                 </p>
 
