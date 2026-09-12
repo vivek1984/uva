@@ -3,8 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "build": "vite build && vite build --ssr resources/js/ssr.jsx",
+        "dev": "vite",
+        "dev:ssr": "php artisan inertia:start-ssr"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

@@ -21,6 +21,8 @@ use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 Route::get('/', function () {
     $sections = PageSection::with('images')
@@ -206,38 +208,39 @@ Route::middleware(['auth', 'verified'])->prefix('my')->name('my.')->group(functi
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 });
 
-// Sitemap for search engines — lists the homepage and every active member's business page
+// Sitemap for search engines — generated with the Spatie package
 Route::get('/sitemap.xml', function () {
-    $urls = collect([
-        ['loc' => url('/'), 'lastmod' => now()->toAtomString(), 'changefreq' => 'daily', 'priority' => '1.0'],
-    ]);
+    $sitemap = Sitemap::create()
+        ->add(
+            Url::create(url('/'))
+                ->setPriority(1.0)
+                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+        );
 
     User::whereIn('role', ['general', 'executive'])
         ->where('status', 'active')
         ->whereNotNull('business_slug')
         ->with(['products' => fn ($q) => $q->where('is_published', true)->whereNotNull('slug')])
         ->get(['business_slug', 'updated_at'])
-        ->each(function ($member) use ($urls) {
-            $urls->push([
-                'loc'        => route('business.show', $member->business_slug),
-                'lastmod'    => $member->updated_at->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority'   => '0.7',
-            ]);
+        ->each(function ($member) use ($sitemap) {
+            $sitemap->add(
+                Url::create(route('business.show', $member->business_slug))
+                    ->setPriority(0.7)
+                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+                    ->setLastModificationDate($member->updated_at)
+            );
 
-            $member->products->each(function ($product) use ($member, $urls) {
-                $urls->push([
-                    'loc'        => route('product.show', [$member->business_slug, $product->slug]),
-                    'lastmod'    => $product->updated_at->toAtomString(),
-                    'changefreq' => 'weekly',
-                    'priority'   => '0.6',
-                ]);
+            $member->products->each(function ($product) use ($member, $sitemap) {
+                $sitemap->add(
+                    Url::create(route('product.show', [$member->business_slug, $product->slug]))
+                        ->setPriority(0.6)
+                        ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+                        ->setLastModificationDate($product->updated_at)
+                );
             });
         });
 
-    return response()
-        ->view('sitemap', ['urls' => $urls])
-        ->header('Content-Type', 'text/xml');
+    return response($sitemap->render(), 200, ['Content-Type' => 'application/xml']);
 })->name('sitemap');
 
 // Public questionnaire fill (no auth required)
