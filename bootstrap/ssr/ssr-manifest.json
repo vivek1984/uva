@@ -13,13 +13,13 @@
     "/build/assets/TextInput-Ai6iyNL7.js"
   ],
   "resources/js/Components/MemberProfileForm.jsx": [
-    "/build/assets/RequirementsBoard-CArumgbW.js"
+    "/build/assets/RequirementsBoard-U95Fr-5h.js"
   ],
   "resources/js/Components/Modal.jsx": [
     "/build/assets/DeleteUserForm-Dj4i1wxR.js"
   ],
   "resources/js/Components/Pagination.jsx": [
-    "/build/assets/BusinessPage-CcXG6Irb.js"
+    "/build/assets/BusinessPage-Bd4c_tCb.js"
   ],
   "resources/js/Components/PrimaryButton.jsx": [
     "/build/assets/PrimaryButton-DgVfVBwo.js"
@@ -28,13 +28,13 @@
     "/build/assets/MyProducts-C9BDby69.js"
   ],
   "resources/js/Components/RequirementsBoard.jsx": [
-    "/build/assets/RequirementsBoard-CArumgbW.js"
+    "/build/assets/RequirementsBoard-U95Fr-5h.js"
   ],
   "resources/js/Components/SecondaryButton.jsx": [
     "/build/assets/DeleteUserForm-Dj4i1wxR.js"
   ],
   "resources/js/Components/SubmitRequirementModal.jsx": [
-    "/build/assets/Welcome-B6v_OVMh.js"
+    "/build/assets/Welcome-BFhuqhnu.js"
   ],
   "resources/js/Components/TextInput.jsx": [
     "/build/assets/TextInput-Ai6iyNL7.js"
@@ -76,7 +76,7 @@
     "/build/assets/Settings-DF3zxbMd.js"
   ],
   "resources/js/Pages/Admin/Dashboard.jsx": [
-    "/build/assets/Dashboard-CG7K5ac9.js"
+    "/build/assets/Dashboard-BtGmTqiC.js"
   ],
   "resources/js/Pages/Auth/ConfirmPassword.jsx": [
     "/build/assets/ConfirmPassword-Xze4egXU.js"
@@ -97,13 +97,16 @@
     "/build/assets/VerifyEmail-CNIg5ZnQ.js"
   ],
   "resources/js/Pages/BusinessPage.jsx": [
-    "/build/assets/BusinessPage-CcXG6Irb.js"
+    "/build/assets/BusinessPage-Bd4c_tCb.js"
   ],
   "resources/js/Pages/Dashboard.jsx": [
     "/build/assets/Dashboard-CtGl8Xur.js"
   ],
   "resources/js/Pages/Executive/Dashboard.jsx": [
-    "/build/assets/Dashboard-mlMuMXCE.js"
+    "/build/assets/Dashboard-D1Qa6W38.js"
+  ],
+  "resources/js/Pages/ExternalRedirect.jsx": [
+    "/build/assets/ExternalRedirect-BlgxBTJl.js"
   ],
   "resources/js/Pages/Homepage/Manager.jsx": [
     "/build/assets/Manager-C53dBNlw.js"
@@ -112,13 +115,13 @@
     "/build/assets/SectionEditor-DWD5YeZA.js"
   ],
   "resources/js/Pages/Member/Dashboard.jsx": [
-    "/build/assets/Dashboard-CCXnteXr.js"
+    "/build/assets/Dashboard-ggd6j2Vk.js"
   ],
   "resources/js/Pages/MyProducts.jsx": [
     "/build/assets/MyProducts-C9BDby69.js"
   ],
   "resources/js/Pages/ProductPage.jsx": [
-    "/build/assets/ProductPage-meegF_05.js"
+    "/build/assets/ProductPage-Dx4fgf4R.js"
   ],
   "resources/js/Pages/Profile/Edit.jsx": [
     "/build/assets/Edit-CrhTncyg.js"
@@ -145,10 +148,10 @@
     "/build/assets/Results-BvgwRh15.js"
   ],
   "resources/js/Pages/Welcome.jsx": [
-    "/build/assets/Welcome-B6v_OVMh.js"
+    "/build/assets/Welcome-BFhuqhnu.js"
   ],
   "resources/js/lib/cn.js": [
-    "/build/assets/BusinessPage-CcXG6Irb.js"
+    "/build/assets/BusinessPage-Bd4c_tCb.js"
   ],
   "resources/js/ssr.jsx": [],
   "resources/js/utils/compressImage.js": [

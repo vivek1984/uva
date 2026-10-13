@@ -94,6 +94,8 @@ function MemberProfileForm({ profile, userName }) {
     email: profile?.email ?? "",
     nature_of_business: profile?.nature_of_business ?? "",
     business_services: profile?.business_services ?? "",
+    external_website_url: profile?.external_website_url ?? "",
+    redirect_to_external_website: profile?.redirect_to_external_website ?? false,
     residential_address: profile?.residential_address ?? "",
     date_of_birth: profile?.date_of_birth ?? "",
     is_married: profile?.is_married ?? false,
@@ -402,6 +404,48 @@ function MemberProfileForm({ profile, userName }) {
               }
             ),
             /* @__PURE__ */ jsx(FieldError, { message: errors.business_services })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "sm:col-span-2 rounded-xl border border-gray-100 bg-gray-50/60 p-4", children: [
+            /* @__PURE__ */ jsx(Label, { en: "Your Own Website", hi: "आपकी अपनी वेबसाइट", optional: true }),
+            /* @__PURE__ */ jsx(
+              "input",
+              {
+                type: "url",
+                value: data.external_website_url,
+                onChange: (e) => {
+                  const value = e.target.value;
+                  setData("external_website_url", value);
+                  if (!value.trim()) setData("redirect_to_external_website", false);
+                },
+                placeholder: "https://your-own-website.com",
+                className: inputClass
+              }
+            ),
+            /* @__PURE__ */ jsx(FieldError, { message: errors.external_website_url }),
+            /* @__PURE__ */ jsxs("div", { className: "mt-4 flex items-center gap-4", children: [
+              /* @__PURE__ */ jsxs("span", { className: "text-sm font-medium text-gray-700", children: [
+                "Send visitors to my own website instead of my UVA page ",
+                /* @__PURE__ */ jsx("span", { className: "text-indigo-400", children: "/ मेरी UVA पेज की बजाय मेरी वेबसाइट पर भेजें" })
+              ] }),
+              /* @__PURE__ */ jsx(
+                "button",
+                {
+                  type: "button",
+                  role: "switch",
+                  "aria-checked": data.redirect_to_external_website,
+                  disabled: !data.external_website_url.trim(),
+                  onClick: () => setData("redirect_to_external_website", !data.redirect_to_external_website),
+                  className: `relative inline-flex h-7 w-14 flex-none items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 ${data.redirect_to_external_website ? "bg-indigo-600" : "bg-gray-300"}`,
+                  children: /* @__PURE__ */ jsx(
+                    "span",
+                    {
+                      className: `inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${data.redirect_to_external_website ? "translate-x-8" : "translate-x-1"}`
+                    }
+                  )
+                }
+              )
+            ] }),
+            data.redirect_to_external_website ? /* @__PURE__ */ jsx("p", { className: "mt-2 text-xs font-medium text-indigo-600", children: "On — visitors to your UVA business page and product links will be redirected to your own website." }) : /* @__PURE__ */ jsx("p", { className: "mt-2 text-xs text-gray-400", children: "Off — your UVA business page keeps showing your products as usual." })
           ] })
         ] })
       ] }),

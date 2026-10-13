@@ -66,7 +66,21 @@ function ProductSeo({ member, product }) {
         ? product.description.slice(0, 155)
         : `${product.name} from ${firmName}. Contact this UVA member for details.`;
     const image = product.photos?.[0]?.url ?? member.firm_photo_url ?? member.photo_url ?? '/storage/logo.jpg';
+    // Unlike og:image, the favicon never falls back to the UVA logo here —
+    // product photo, then firm photo, then member photo, then a blank icon.
+    const faviconUrl = product.photos?.[0]?.url ?? member.firm_photo_url ?? member.photo_url ?? null;
     const numericPrice = /^\d+(\.\d+)?$/.test(String(product.price ?? '').trim()) ? product.price : null;
+    const siteUrl = new URL(member.page_url).origin + '/';
+
+    const breadcrumbJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: siteName, item: siteUrl },
+            { '@type': 'ListItem', position: 2, name: firmName, item: member.page_url },
+            { '@type': 'ListItem', position: 3, name: product.name, item: product.page_url },
+        ],
+    };
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -99,6 +113,8 @@ function ProductSeo({ member, product }) {
             <meta name="description" content={description} />
             <meta name="robots" content="index, follow" />
             <link rel="canonical" href={product.page_url} />
+            <link rel="icon" href={faviconUrl ?? 'data:,'} />
+            <link rel="apple-touch-icon" href={faviconUrl ?? 'data:,'} />
             <meta property="og:type" content="product" />
             <meta property="og:title" content={title} />
             <meta property="og:description" content={description} />
@@ -109,6 +125,7 @@ function ProductSeo({ member, product }) {
             <meta name="twitter:description" content={description} />
             <meta name="twitter:image" content={image} />
             <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+            <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
         </Head>
     );
 }

@@ -1,6 +1,6 @@
 import { jsxs, jsx } from "react/jsx-runtime";
 import { A as AuthenticatedLayout } from "./AuthenticatedLayout-CO3HPgl3.js";
-import { R as RequirementsBoard, M as MemberProfileForm } from "./RequirementsBoard-CArumgbW.js";
+import { R as RequirementsBoard, M as MemberProfileForm } from "./RequirementsBoard-U95Fr-5h.js";
 import { usePage, Head, useForm } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import "./compressImage-CFkZP8E5.js";

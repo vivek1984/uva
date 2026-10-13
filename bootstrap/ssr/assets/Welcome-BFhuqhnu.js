@@ -236,7 +236,7 @@ function filterMembers(members, query) {
   if (!q) return members;
   const results = [];
   for (const m of members) {
-    const direct = textMatches(m.name, q) || textMatches(m.firm_name, q) || textMatches(m.firm_address, q);
+    const direct = textMatches(m.name, q) || textMatches(m.firm_name, q) || textMatches(m.firm_address, q) || textMatches(m.business_services, q);
     if (direct) {
       results.push({ ...m, matchedProduct: null });
       continue;

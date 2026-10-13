@@ -233,6 +233,7 @@ function SeoHead({ member, products }) {
   const rawDesc = member.business_services || member.nature_of_business || "";
   const description = rawDesc ? `${firmName}${city ? ", " + city : ""} — ${rawDesc.slice(0, 140)}` : `${firmName}${city ? " in " + city : ""} is a member of ${siteName}. Explore their products and services.`;
   const ogImage = member.firm_photo_url ?? member.photo_url ?? "/storage/logo.jpg";
+  const faviconUrl = member.firm_photo_url ?? member.photo_url ?? null;
   const url = member.page_url;
   const productNames = products.slice(0, 5).map((p) => p.name).join(", ");
   const keywords = [
@@ -296,6 +297,8 @@ function SeoHead({ member, products }) {
     /* @__PURE__ */ jsx("meta", { name: "keywords", content: keywords }),
     /* @__PURE__ */ jsx("meta", { name: "robots", content: "index, follow" }),
     /* @__PURE__ */ jsx("link", { rel: "canonical", href: url }),
+    /* @__PURE__ */ jsx("link", { rel: "icon", href: faviconUrl ?? "data:," }),
+    /* @__PURE__ */ jsx("link", { rel: "apple-touch-icon", href: faviconUrl ?? "data:," }),
     /* @__PURE__ */ jsx("meta", { property: "og:type", content: "business.business" }),
     /* @__PURE__ */ jsx("meta", { property: "og:title", content: title }),
     /* @__PURE__ */ jsx("meta", { property: "og:description", content: description }),

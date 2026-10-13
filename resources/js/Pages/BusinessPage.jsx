@@ -264,6 +264,9 @@ function SeoHead({ member, products }) {
         : `${firmName}${city ? ' in ' + city : ''} is a member of ${siteName}. Explore their products and services.`;
 
     const ogImage    = member.firm_photo_url ?? member.photo_url ?? '/storage/logo.jpg';
+    // Unlike og:image, the favicon never falls back to the UVA logo here —
+    // firm photo, then member photo, then a blank (suppressed) icon.
+    const faviconUrl = member.firm_photo_url ?? member.photo_url ?? null;
     const url        = member.page_url;
 
     const productNames = products.slice(0, 5).map(p => p.name).join(', ');
@@ -338,6 +341,8 @@ function SeoHead({ member, products }) {
             <meta name="keywords" content={keywords} />
             <meta name="robots" content="index, follow" />
             <link rel="canonical" href={url} />
+            <link rel="icon" href={faviconUrl ?? 'data:,'} />
+            <link rel="apple-touch-icon" href={faviconUrl ?? 'data:,'} />
 
             {/* Open Graph */}
             <meta property="og:type" content="business.business" />

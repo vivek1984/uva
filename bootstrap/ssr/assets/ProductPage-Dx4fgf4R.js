@@ -59,7 +59,18 @@ function ProductSeo({ member, product }) {
   const title = `${product.name} | ${firmName} | ${siteName}`;
   const description = product.description ? product.description.slice(0, 155) : `${product.name} from ${firmName}. Contact this UVA member for details.`;
   const image = product.photos?.[0]?.url ?? member.firm_photo_url ?? member.photo_url ?? "/storage/logo.jpg";
+  const faviconUrl = product.photos?.[0]?.url ?? member.firm_photo_url ?? member.photo_url ?? null;
   const numericPrice = /^\d+(\.\d+)?$/.test(String(product.price ?? "").trim()) ? product.price : null;
+  const siteUrl = new URL(member.page_url).origin + "/";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: siteName, item: siteUrl },
+      { "@type": "ListItem", position: 2, name: firmName, item: member.page_url },
+      { "@type": "ListItem", position: 3, name: product.name, item: product.page_url }
+    ]
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -89,6 +100,8 @@ function ProductSeo({ member, product }) {
     /* @__PURE__ */ jsx("meta", { name: "description", content: description }),
     /* @__PURE__ */ jsx("meta", { name: "robots", content: "index, follow" }),
     /* @__PURE__ */ jsx("link", { rel: "canonical", href: product.page_url }),
+    /* @__PURE__ */ jsx("link", { rel: "icon", href: faviconUrl ?? "data:," }),
+    /* @__PURE__ */ jsx("link", { rel: "apple-touch-icon", href: faviconUrl ?? "data:," }),
     /* @__PURE__ */ jsx("meta", { property: "og:type", content: "product" }),
     /* @__PURE__ */ jsx("meta", { property: "og:title", content: title }),
     /* @__PURE__ */ jsx("meta", { property: "og:description", content: description }),
@@ -98,7 +111,8 @@ function ProductSeo({ member, product }) {
     /* @__PURE__ */ jsx("meta", { name: "twitter:title", content: title }),
     /* @__PURE__ */ jsx("meta", { name: "twitter:description", content: description }),
     /* @__PURE__ */ jsx("meta", { name: "twitter:image", content: image }),
-    /* @__PURE__ */ jsx("script", { type: "application/ld+json", children: JSON.stringify(jsonLd) })
+    /* @__PURE__ */ jsx("script", { type: "application/ld+json", children: JSON.stringify(jsonLd) }),
+    /* @__PURE__ */ jsx("script", { type: "application/ld+json", children: JSON.stringify(breadcrumbJsonLd) })
   ] });
 }
 function Gallery({ photos, productName }) {
