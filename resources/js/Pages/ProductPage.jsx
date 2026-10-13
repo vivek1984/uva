@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { Share2 } from 'lucide-react';
 
 function formatPrice(price) {
     if (!price) return null;
@@ -49,14 +50,9 @@ function ShareButton({ url, title }) {
             type="button"
             onClick={handleShare}
             aria-label="Share product"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-primary/10 bg-white px-5 text-sm font-semibold text-primary/70 transition hover:bg-primary/5"
         >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="18" cy="5" r="2.5" strokeWidth="1.8" />
-                <circle cx="6" cy="12" r="2.5" strokeWidth="1.8" />
-                <circle cx="18" cy="19" r="2.5" strokeWidth="1.8" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8.4 11.1l7.1-4.4M8.4 12.9l7.1 4.4" />
-            </svg>
+            <Share2 className="h-4 w-4" />
             <span>Share</span>
         </button>
     );
@@ -122,8 +118,8 @@ function Gallery({ photos, productName }) {
 
     if (!photos.length) {
         return (
-            <div className="flex aspect-[4/3] items-center justify-center rounded-2xl bg-gray-100">
-                <svg className="h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex aspect-[4/3] items-center justify-center rounded-2xl bg-primary/5">
+                <svg className="h-16 w-16 text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
             </div>
@@ -132,7 +128,7 @@ function Gallery({ photos, productName }) {
 
     return (
         <div>
-            <div className="overflow-hidden rounded-2xl bg-gray-100">
+            <div className="overflow-hidden rounded-2xl bg-primary/5">
                 <img src={photos[current].url} alt={productName} className="aspect-[4/3] w-full object-cover" />
             </div>
             {photos.length > 1 && (
@@ -141,7 +137,7 @@ function Gallery({ photos, productName }) {
                         <button
                             key={photo.id}
                             onClick={() => setCurrent(index)}
-                            className={`overflow-hidden rounded-lg border-2 ${index === current ? 'border-indigo-600' : 'border-transparent'}`}
+                            className={`overflow-hidden rounded-lg border-2 ${index === current ? 'border-accent' : 'border-transparent'}`}
                         >
                             <img src={photo.url} alt="" className="aspect-square w-full object-cover" />
                         </button>
@@ -167,15 +163,22 @@ export default function ProductPage({ member, product }) {
         <>
             <ProductSeo member={member} product={product} />
 
-            <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#f8fafc_0%,_#eef2ff_32%,_#f8fafc_100%)] text-slate-900">
+            <div className="storefront-theme min-h-screen bg-[radial-gradient(circle_at_top,_rgb(var(--color-surface))_0%,_rgb(var(--color-accent)/0.08)_32%,_rgb(var(--color-surface))_100%)] text-primary">
                 <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-                    <div className="mb-6 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:p-5">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="mb-6 overflow-hidden rounded-3xl border border-primary/10 bg-white/90 shadow-[0_18px_45px_rgba(28,28,26,0.06)] backdrop-blur-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-start">
+                        {/* Firm photo banner — same left-column, fixed-height treatment as the business page */}
+                        {member.firm_photo_url && (
+                            <div className="relative h-40 w-full flex-none overflow-hidden sm:h-40 sm:w-1/5">
+                                <img src={member.firm_photo_url} alt={member.firm_name ?? member.name} className="h-full w-full object-cover" />
+                            </div>
+                        )}
+                        <div className="flex flex-1 flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between sm:p-5">
                             <div className="flex items-center gap-3">
                                 {member.photo_url ? (
-                                    <img src={member.photo_url} alt={member.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-indigo-100 shadow-sm" />
+                                    <img src={member.photo_url} alt={member.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-accent/15 shadow-sm" />
                                 ) : (
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-500 text-lg font-bold text-white ring-2 ring-indigo-100 shadow-sm">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-bold text-white ring-2 ring-accent/15 shadow-sm">
                                         {firmName.charAt(0).toUpperCase()}
                                     </div>
                                 )}
@@ -183,15 +186,15 @@ export default function ProductPage({ member, product }) {
                                 <div>
                                     <a
                                         href={member.page_url}
-                                        className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-700 transition hover:bg-indigo-100"
+                                        className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-accent transition hover:bg-accent/10"
                                     >
                                         Home Page
                                     </a>
-                                    <a href={member.page_url} className="mt-2 block text-lg font-extrabold text-slate-900 transition hover:text-indigo-600">
+                                    <a href={member.page_url} className="mt-2 block text-lg font-extrabold text-primary transition hover:text-accent">
                                         {sellerName}
                                     </a>
                                     {member.firm_address && (
-                                        <p className="mt-1 text-sm text-slate-600">{member.firm_address}</p>
+                                        <p className="mt-1 text-sm text-primary/60">{member.firm_address}</p>
                                     )}
                                 </div>
                             </div>
@@ -205,35 +208,36 @@ export default function ProductPage({ member, product }) {
                                 </a>
                             )}
                         </div>
+                        </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
+                    <div className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_22px_60px_rgba(28,28,26,0.08)]">
                         <div className="grid gap-8 p-4 sm:p-6 lg:grid-cols-[1.12fr_0.88fr] lg:p-8">
-                            <div className="rounded-[24px] bg-slate-50 p-3 sm:p-4">
+                            <div className="rounded-[24px] bg-primary/[0.03] p-3 sm:p-4">
                                 <Gallery photos={product.photos} productName={product.name} />
                             </div>
 
-                            <section className="flex flex-col justify-center">
+                            <section className="flex flex-col">
                                 <div className="mb-4 flex flex-wrap items-center gap-2">
                                     {product.category && (
-                                        <span className="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
+                                        <span className="inline-flex rounded-full bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
                                             {product.category}
                                         </span>
                                     )}
                                     {member.nature_of_business && (
-                                        <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+                                        <span className="inline-flex rounded-full bg-primary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary/60">
                                             {member.nature_of_business}
                                         </span>
                                     )}
                                 </div>
 
-                                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{product.name}</h1>
+                                <h1 className="text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">{product.name}</h1>
 
                                 <div className="mt-4 flex items-baseline gap-3">
                                     {product.price ? (
-                                        <p className="text-3xl font-extrabold text-slate-900">{formatPrice(product.price)}</p>
+                                        <p className="text-3xl font-extrabold text-primary">{formatPrice(product.price)}</p>
                                     ) : (
-                                        <p className="text-base font-medium text-slate-500">Price on request</p>
+                                        <p className="text-base font-medium text-primary/50">Price on request</p>
                                     )}
                                 </div>
 
@@ -244,25 +248,45 @@ export default function ProductPage({ member, product }) {
                                         </a>
                                     )}
                                     {member.phone_number && (
-                                        <a href={`tel:${member.phone_number}`} className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                                        <a href={`tel:${member.phone_number}`} className="inline-flex h-12 items-center justify-center rounded-xl border border-primary/10 bg-white px-5 text-sm font-semibold text-primary/70 transition hover:bg-primary/5">
                                             Call Seller
                                         </a>
                                     )}
                                     <ShareButton url={product.page_url} title={product.name} />
                                 </div>
 
+                                {product.description && (
+                                    <div className="mt-8 border-t border-primary/10 pt-6">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary/50">Product details</p>
+                                        <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-primary/70">{product.description}</p>
+                                    </div>
+                                )}
 
+                                <div className="mt-8 flex items-start gap-3 rounded-2xl border border-primary/10 bg-primary/[0.02] px-4 py-4">
+                                    {member.photo_url ? (
+                                        <img src={member.photo_url} alt={member.name} className="h-10 w-10 flex-none rounded-full object-cover" />
+                                    ) : (
+                                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                                            {firmName.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary/40">Sold by</p>
+                                        <a href={member.page_url} className="block truncate text-sm font-bold text-primary hover:text-accent">{sellerName}</a>
+                                        <p className="text-xs text-primary/50">To purchase this product, please contact us on WhatsApp.</p>
+                                    </div>
+                                </div>
                             </section>
                         </div>
 
-                        <div className="border-t border-slate-200 bg-slate-50/80 px-4 py-6 sm:px-6 lg:px-8">
+                        <div className="border-t border-primary/10 bg-primary/[0.02] px-4 py-6 sm:px-6 lg:px-8">
                             <div className="max-w-3xl">
-                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">About this business</p>
+                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary/50">About this business</p>
                                 {member.business_services && (
-                                    <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-slate-600">{member.business_services}</p>
+                                    <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-primary/60">{member.business_services}</p>
                                 )}
                                 {!member.business_services && (
-                                    <p className="mt-3 text-base leading-relaxed text-slate-500">Please contact the seller for more information about their services and offerings.</p>
+                                    <p className="mt-3 text-base leading-relaxed text-primary/50">Please contact the seller for more information about their services and offerings.</p>
                                 )}
                             </div>
                         </div>

@@ -23,6 +23,8 @@ class MemberProfileController extends Controller
             'email' => 'nullable|email|max:255',
             'nature_of_business' => 'nullable|in:wholesale,retail,both',
             'business_services' => 'nullable|string|max:1000',
+            'external_website_url' => 'nullable|url|max:255',
+            'redirect_to_external_website' => 'nullable|boolean',
             'residential_address' => 'nullable|string|max:500',
             'date_of_birth' => 'nullable|date',
             'is_married' => 'required|boolean',
@@ -73,6 +75,9 @@ class MemberProfileController extends Controller
                 'email' => $validated['email'] ?? null,
                 'nature_of_business' => $validated['nature_of_business'] ?? null,
                 'business_services' => $validated['business_services'] ?? null,
+                'external_website_url' => $validated['external_website_url'] ?? null,
+                // Can never be enabled without a URL to redirect to, regardless of what the client sends.
+                'redirect_to_external_website' => ! empty($validated['external_website_url']) && ($validated['redirect_to_external_website'] ?? false),
                 'residential_address' => $validated['residential_address'] ?? null,
                 'date_of_birth' => $validated['date_of_birth'] ?? null,
                 'is_married' => $isMarried,

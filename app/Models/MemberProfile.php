@@ -19,6 +19,8 @@ class MemberProfile extends Model
         'email',
         'nature_of_business',
         'business_services',
+        'external_website_url',
+        'redirect_to_external_website',
         'residential_address',
         'spouse_name',
         'spouse_phone_number',
@@ -36,6 +38,7 @@ class MemberProfile extends Model
             'spouse_date_of_birth' => 'date',
             'anniversary_date' => 'date',
             'is_married' => 'boolean',
+            'redirect_to_external_website' => 'boolean',
         ];
     }
 
@@ -130,6 +133,8 @@ class MemberProfile extends Model
             'email' => $this->email,
             'nature_of_business' => $this->nature_of_business,
             'business_services' => $this->business_services,
+            'external_website_url' => $this->external_website_url,
+            'redirect_to_external_website' => $this->redirect_to_external_website,
             'residential_address' => $this->residential_address,
             'spouse_name' => $this->spouse_name,
             'spouse_phone_number' => $this->spouse_phone_number,

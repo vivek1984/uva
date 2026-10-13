@@ -4,17 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ProductPageController extends Controller
 {
-    public function show(User $user, Product $product)
+    public function show(User $user, Product $product, Request $request)
     {
         abort_if($product->user_id !== $user->id, 404);
         abort_if(! $product->is_published, 404);
 
         $profile = $user->profile;
-        $product->load('photos');
+
+        if ($profile?->redirect_to_external_website && $profile->external_website_url && ! $request->boolean('catalog')) {
+            return Inertia::render('ExternalRedirect', [
+                'member' => [
+                    'name'      => $user->name,
+                    'firm_name' => $profile->firm_name,
+                    'photo_url' => $profile->photo ? asset('storage/' . $profile->photo) : null,
+                ],
+                'externalUrl' => $profile->external_website_url,
+                'fallbackUrl' => route('product.show', [$user->business_slug, $product->slug]) . '?catalog=1',
+            ]);
+        }
+
+        $product->load(['photos', 'category']);
 
         return Inertia::render('ProductPage', [
             'member' => [

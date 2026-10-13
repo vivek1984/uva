@@ -13,7 +13,7 @@ class Product extends Model
         'slug',
         'description',
         'price',
-        'category',
+        'category_id',
         'is_published',
     ];
 
@@ -32,6 +32,11 @@ class Product extends Model
     public function photos()
     {
         return $this->hasMany(ProductPhoto::class)->orderBy('sort_order');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public static function generateSlug(int $userId, string $name, ?int $ignoreProductId = null): string
@@ -59,7 +64,8 @@ class Product extends Model
             'slug'         => $this->slug,
             'description'  => $this->description,
             'price'        => $this->price,
-            'category'     => $this->category,
+            'category'     => $this->category?->name,
+            'category_id'  => $this->category_id,
             'is_published' => $this->is_published,
             'photos'       => $this->photos->map(fn ($p) => [
                 'id'  => $p->id,

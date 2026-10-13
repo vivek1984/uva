@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProductsTab from '@/Components/ProductsTab';
 import { Head } from '@inertiajs/react';
 
-export default function MyProducts({ products, businessSlug }) {
+export default function MyProducts({ products, businessSlug, categories }) {
     return (
         <AuthenticatedLayout
             header={
@@ -15,7 +15,7 @@ export default function MyProducts({ products, businessSlug }) {
             <Head title="My Products" />
             <div className="py-8">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <ProductsTab products={products} businessSlug={businessSlug} />
+                    <ProductsTab products={products} businessSlug={businessSlug} categories={categories} />
                 </div>
             </div>
         </AuthenticatedLayout>

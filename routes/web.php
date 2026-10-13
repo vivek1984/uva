@@ -3,6 +3,7 @@
 use App\Http\Controllers\Accounting;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\BusinessPageController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Executive;
 use App\Http\Controllers\HomepageController;
@@ -51,7 +52,7 @@ Route::get('/', function () {
 
     $members = User::whereIn('role', ['general', 'executive'])
         ->where('status', 'active')
-        ->with(['profile', 'products' => fn ($q) => $q->where('is_published', true)])
+        ->with(['profile', 'products' => fn ($q) => $q->where('is_published', true)->with('category')])
         ->get()
         ->map(fn($u) => [
             'id'               => $u->id,
@@ -65,7 +66,7 @@ Route::get('/', function () {
                 'id'       => $p->id,
                 'name'     => $p->name,
                 'slug'     => $p->slug,
-                'category' => $p->category,
+                'category' => $p->category?->name,
                 'page_url' => $p->slug ? route('product.show', [$u->business_slug, $p->slug]) : null,
             ])->values(),
         ])
@@ -208,6 +209,12 @@ Route::middleware(['auth', 'verified'])->prefix('my')->name('my.')->group(functi
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 });
 
+// Product category management — each member manages their own categories
+Route::middleware(['auth', 'verified'])->prefix('categories')->name('categories.')->group(function () {
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+});
+
 // Sitemap for search engines — generated with the Spatie package
 Route::get('/sitemap.xml', function () {
     $sitemap = Sitemap::create()
@@ -221,7 +228,7 @@ Route::get('/sitemap.xml', function () {
         ->where('status', 'active')
         ->whereNotNull('business_slug')
         ->with(['products' => fn ($q) => $q->where('is_published', true)->whereNotNull('slug')])
-        ->get(['business_slug', 'updated_at'])
+        ->get(['id', 'business_slug', 'updated_at'])
         ->each(function ($member) use ($sitemap) {
             $sitemap->add(
                 Url::create(route('business.show', $member->business_slug))

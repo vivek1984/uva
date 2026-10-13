@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+    /* Design tokens for the public storefront pages only (BusinessPage,
+       ProductPage) — scoped to this class, never :root, so the rest of the
+       app (dashboard/admin) keeps its existing indigo/gray look untouched. */
+    .storefront-theme {
+        --color-primary: 28 28 26;
+        --color-accent: 196 122 59;
+        --color-surface: 250 248 245;
+    }
+
     /* Remove blue tap flash on mobile */
     * {
         -webkit-tap-highlight-color: transparent;

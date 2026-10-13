@@ -99,21 +99,39 @@ function ExistingPhotoTile({ photo, markedForDelete, onToggle }) {
     )
   ] });
 }
-function ProductModal({ product, businessSlug, onClose }) {
+function ProductModal({ product, businessSlug, categories, onClose }) {
   const isEdit = !!product;
   const fileRef = useRef(null);
   const [newPhotoFiles, setNewPhotoFiles] = useState([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
   const [deletePhotoIds, setDeletePhotoIds] = useState([]);
   const [compressing, setCompressing] = useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const { data, setData, processing, errors, reset } = useForm({
     name: product?.name ?? "",
     slug: product?.slug ?? "",
     description: product?.description ?? "",
     price: product?.price ?? "",
-    category: product?.category ?? "",
+    category_id: product?.category_id ?? "",
     is_published: product?.is_published ?? true
   });
+  function submitNewCategory(e) {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setCreatingCategory(true);
+    router.post(route("categories.store"), { name: newCategoryName.trim() }, {
+      preserveScroll: true,
+      onSuccess: (page) => {
+        const created = page.props.flash?.newCategory;
+        if (created) setData("category_id", created.id);
+        setNewCategoryName("");
+        setAddingCategory(false);
+      },
+      onFinish: () => setCreatingCategory(false)
+    });
+  }
   async function handleFileChange(e) {
     const raw = Array.from(e.target.files);
     e.target.value = "";
@@ -141,7 +159,7 @@ function ProductModal({ product, businessSlug, onClose }) {
     fd.append("slug", data.slug ?? "");
     fd.append("description", data.description ?? "");
     fd.append("price", data.price ?? "");
-    fd.append("category", data.category ?? "");
+    fd.append("category_id", data.category_id ?? "");
     fd.append("is_published", data.is_published ? "1" : "0");
     newPhotoFiles.forEach((f) => fd.append("photos[]", f));
     if (isEdit) {
@@ -230,15 +248,49 @@ function ProductModal({ product, businessSlug, onClose }) {
               errors.price && /* @__PURE__ */ jsx("p", { className: "mt-1 text-xs text-red-500", children: errors.price })
             ] }),
             /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("label", { className: "mb-1.5 block text-sm font-semibold text-gray-700", children: "Category" }),
-              /* @__PURE__ */ jsx(
-                "input",
+              /* @__PURE__ */ jsxs("div", { className: "mb-1.5 flex items-center justify-between", children: [
+                /* @__PURE__ */ jsx("label", { className: "block text-sm font-semibold text-gray-700", children: "Category" }),
+                /* @__PURE__ */ jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => setAddingCategory((v) => !v),
+                    className: "text-xs font-semibold text-indigo-600 hover:text-indigo-700",
+                    children: addingCategory ? "Cancel" : "+ New"
+                  }
+                )
+              ] }),
+              addingCategory ? /* @__PURE__ */ jsxs("div", { className: "flex gap-1.5", children: [
+                /* @__PURE__ */ jsx(
+                  "input",
+                  {
+                    type: "text",
+                    value: newCategoryName,
+                    onChange: (e) => setNewCategoryName(e.target.value),
+                    placeholder: "e.g. Clothing",
+                    className: "h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  }
+                ),
+                /* @__PURE__ */ jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: submitNewCategory,
+                    disabled: creatingCategory || !newCategoryName.trim(),
+                    className: "h-11 flex-none rounded-xl bg-indigo-600 px-3 text-xs font-bold text-white disabled:opacity-60",
+                    children: creatingCategory ? "…" : "Add"
+                  }
+                )
+              ] }) : /* @__PURE__ */ jsxs(
+                "select",
                 {
-                  type: "text",
-                  value: data.category,
-                  onChange: (e) => setData("category", e.target.value),
-                  placeholder: "e.g. Clothing",
-                  className: "h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  value: data.category_id,
+                  onChange: (e) => setData("category_id", e.target.value),
+                  className: "h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20",
+                  children: [
+                    /* @__PURE__ */ jsx("option", { value: "", children: "No category" }),
+                    categories?.map((c) => /* @__PURE__ */ jsx("option", { value: c.id, children: c.name }, c.id))
+                  ]
                 }
               )
             ] })
@@ -383,13 +435,82 @@ function DeleteModal({ product, onClose }) {
     ] })
   ] }) });
 }
-function ProductsTab({ products, businessSlug }) {
+function ManageCategoriesModal({ categories, onClose }) {
+  const [newName, setNewName] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  function addCategory(e) {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setAdding(true);
+    router.post(route("categories.store"), { name: newName.trim() }, {
+      preserveScroll: true,
+      onSuccess: () => setNewName(""),
+      onFinish: () => setAdding(false)
+    });
+  }
+  function deleteCategory(category) {
+    setDeletingId(category.id);
+    router.delete(route("categories.destroy", category.id), {
+      preserveScroll: true,
+      onFinish: () => setDeletingId(null)
+    });
+  }
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+  return /* @__PURE__ */ jsx("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-4 sm:items-center", onClick: handleBackdrop, children: /* @__PURE__ */ jsxs("div", { className: "w-full max-w-sm rounded-2xl bg-white shadow-2xl max-h-[85vh] flex flex-col", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between border-b border-gray-100 px-6 py-4 flex-none", children: [
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-gray-900", children: "Manage Categories" }),
+      /* @__PURE__ */ jsx("button", { onClick: onClose, className: "rounded-lg p-1.5 text-gray-400 hover:bg-gray-100", children: /* @__PURE__ */ jsx("svg", { className: "h-5 w-5", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M6 18L18 6M6 6l12 12" }) }) })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "overflow-y-auto flex-1 px-6 py-5", children: [
+      /* @__PURE__ */ jsxs("form", { onSubmit: addCategory, className: "mb-4 flex gap-1.5", children: [
+        /* @__PURE__ */ jsx(
+          "input",
+          {
+            type: "text",
+            value: newName,
+            onChange: (e) => setNewName(e.target.value),
+            placeholder: "New category name",
+            className: "h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          }
+        ),
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            type: "submit",
+            disabled: adding || !newName.trim(),
+            className: "h-11 flex-none rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white disabled:opacity-60",
+            children: adding ? "…" : "Add"
+          }
+        )
+      ] }),
+      !categories || categories.length === 0 ? /* @__PURE__ */ jsx("p", { className: "py-6 text-center text-sm text-gray-400", children: "No categories yet." }) : /* @__PURE__ */ jsx("ul", { className: "space-y-2", children: categories.map((category) => /* @__PURE__ */ jsxs("li", { className: "flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5", children: [
+        /* @__PURE__ */ jsx("span", { className: "text-sm font-medium text-gray-700", children: category.name }),
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            type: "button",
+            onClick: () => deleteCategory(category),
+            disabled: deletingId === category.id,
+            className: "flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-500 hover:bg-red-100 disabled:opacity-60",
+            children: "✕"
+          }
+        )
+      ] }, category.id)) })
+    ] })
+  ] }) });
+}
+function ProductsTab({ products, businessSlug, categories }) {
   const [editProduct, setEditProduct] = useState(null);
   const [deleteProduct, setDeleteProduct] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
   const { flash } = usePage().props;
   return /* @__PURE__ */ jsxs("div", { children: [
     flash?.success && /* @__PURE__ */ jsx("div", { className: "mb-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700 border border-green-200", children: flash.success }),
+    flash?.error && /* @__PURE__ */ jsx("div", { className: "mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 border border-red-200", children: flash.error }),
     /* @__PURE__ */ jsxs("div", { className: "mb-5 flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs("div", { children: [
         /* @__PURE__ */ jsx("h3", { className: "text-base font-bold text-gray-900", children: "My Products" }),
@@ -407,6 +528,14 @@ function ProductsTab({ products, businessSlug }) {
               /* @__PURE__ */ jsx("svg", { className: "h-3.5 w-3.5", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }) }),
               "View Page"
             ]
+          }
+        ),
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: () => setShowCategories(true),
+            className: "inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition",
+            children: "Manage Categories"
           }
         ),
         /* @__PURE__ */ jsxs(
@@ -444,12 +573,13 @@ function ProductsTab({ products, businessSlug }) {
       },
       product.id
     )) }),
-    showAdd && /* @__PURE__ */ jsx(ProductModal, { businessSlug, onClose: () => setShowAdd(false) }),
-    editProduct && /* @__PURE__ */ jsx(ProductModal, { product: editProduct, businessSlug, onClose: () => setEditProduct(null) }),
-    deleteProduct && /* @__PURE__ */ jsx(DeleteModal, { product: deleteProduct, onClose: () => setDeleteProduct(null) })
+    showAdd && /* @__PURE__ */ jsx(ProductModal, { businessSlug, categories, onClose: () => setShowAdd(false) }),
+    editProduct && /* @__PURE__ */ jsx(ProductModal, { product: editProduct, businessSlug, categories, onClose: () => setEditProduct(null) }),
+    deleteProduct && /* @__PURE__ */ jsx(DeleteModal, { product: deleteProduct, onClose: () => setDeleteProduct(null) }),
+    showCategories && /* @__PURE__ */ jsx(ManageCategoriesModal, { categories, onClose: () => setShowCategories(false) })
   ] });
 }
-function MyProducts({ products, businessSlug }) {
+function MyProducts({ products, businessSlug, categories }) {
   return /* @__PURE__ */ jsxs(
     AuthenticatedLayout,
     {
@@ -459,7 +589,7 @@ function MyProducts({ products, businessSlug }) {
       ] }),
       children: [
         /* @__PURE__ */ jsx(Head, { title: "My Products" }),
-        /* @__PURE__ */ jsx("div", { className: "py-8", children: /* @__PURE__ */ jsx("div", { className: "mx-auto max-w-6xl px-4 sm:px-6 lg:px-8", children: /* @__PURE__ */ jsx(ProductsTab, { products, businessSlug }) }) })
+        /* @__PURE__ */ jsx("div", { className: "py-8", children: /* @__PURE__ */ jsx("div", { className: "mx-auto max-w-6xl px-4 sm:px-6 lg:px-8", children: /* @__PURE__ */ jsx(ProductsTab, { products, businessSlug, categories }) }) })
       ]
     }
   );

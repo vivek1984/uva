@@ -16,7 +16,7 @@ class ProductController extends Controller
         $user = $request->user();
 
         $products = $user->products()
-            ->with('photos')
+            ->with(['photos', 'category'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($product) => $product->toCardData() + [
@@ -29,6 +29,7 @@ class ProductController extends Controller
         return \Inertia\Inertia::render('MyProducts', [
             'products'     => $products,
             'businessSlug' => $user->business_slug,
+            'categories'   => $user->categories()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -45,7 +46,10 @@ class ProductController extends Controller
             ],
             'description'  => 'nullable|string',
             'price'        => 'nullable|string|max:50',
-            'category'     => 'nullable|string|max:100',
+            'category_id'  => [
+                'nullable',
+                Rule::exists('categories', 'id')->where('user_id', $request->user()->id),
+            ],
             'is_published' => 'boolean',
             'photos'       => 'nullable|array|max:10',
             'photos.*'     => 'image|max:4096',
@@ -56,7 +60,7 @@ class ProductController extends Controller
             'slug'         => ($data['slug'] ?? null) ?: Product::generateSlug($request->user()->id, $data['name']),
             'description'  => $data['description'] ?? null,
             'price'        => $data['price'] ?? null,
-            'category'     => $data['category'] ?? null,
+            'category_id'  => $data['category_id'] ?? null,
             'is_published' => $data['is_published'] ?? true,
         ]);
 
@@ -87,7 +91,10 @@ class ProductController extends Controller
             ],
             'description'       => 'nullable|string',
             'price'             => 'nullable|string|max:50',
-            'category'          => 'nullable|string|max:100',
+            'category_id'       => [
+                'nullable',
+                Rule::exists('categories', 'id')->where('user_id', $request->user()->id),
+            ],
             'is_published'      => 'boolean',
             'photos'            => 'nullable|array|max:10',
             'photos.*'          => 'image|max:4096',
@@ -100,7 +107,7 @@ class ProductController extends Controller
             'slug'         => ($data['slug'] ?? null) ?: ($product->slug ?: Product::generateSlug($request->user()->id, $data['name'], $product->id)),
             'description'  => $data['description'] ?? null,
             'price'        => $data['price'] ?? null,
-            'category'     => $data['category'] ?? null,
+            'category_id'  => $data['category_id'] ?? null,
             'is_published' => $data['is_published'] ?? true,
         ]);
 
